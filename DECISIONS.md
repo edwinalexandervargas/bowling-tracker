@@ -31,3 +31,9 @@ EOF
 - Decision: for-loop over 10 frames, with an index `i` into the flat rolls array that advances by 1 (strike) or 2 (otherwise).
 - Alternatives: reduce over rolls (can't see frame boundaries); convert to Frame[] first (extra step, and the 10th frame still needs special handling).
 - Why: bonuses read ahead from `i`, and the frame count is fixed at 10, so the loop condition is simple and never runs past the game.
+
+## score() on unfinished games returns the last scorable total
+- Decision: score() returns the last entry of frameScores (0 if none), so partial games give a partial total instead of NaN.
+- Alternatives: throw on incomplete games; return null.
+- Why: the UI's scratch score reads the same function and a pending frame should never show NaN.
+- Risk: callers can't tell "finished" from "partial" by score() alone; check frameScores(rolls).length === 10.
