@@ -33,20 +33,41 @@ export type Shot = {
 
 export type Frame = {
   shots: Shot[]          // 1 (strike), 2 (spare/open), or up to 3 in the 10th
+  ballId?: string        // which ball was used this frame
 }
 
 export type Game = {
   id: string
   frames: Frame[]
-  ballId?: string        // which ball was used
 }
 
-export type Session = {
-  id: string
-  date: string           // ISO date, e.g. "2026-11-09"
-  patternId?: string     // oil pattern, optional
-  games: Game[]          // typically 3 per league night
-}
+export type SessionType = 'league' | 'tournament' | 'practice'
+
+export type Session =
+  | {
+      id: string
+      date: string
+      type: 'league'
+      eventName: string      // e.g. "Thursday Night Mixed"
+      patternId?: string
+      games: Game[]
+    }
+  | {
+      id: string
+      date: string
+      type: 'tournament'
+      eventName: string      // e.g. "City Championship"
+      patternId?: string
+      games: Game[]
+    }
+  | {
+      id: string
+      date: string
+      type: 'practice'
+      eventName?: string
+      patternId?: string
+      games: Game[]
+    }
 
 export type Pattern = {
   id: string
