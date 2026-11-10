@@ -47,3 +47,11 @@ it('a spare with a bonus shot completes the 10th', () => {
   ]
   expect(isFrameComplete(shots, 9)).toBe(true)
 })
+
+it('a strike then a non-clearing shot does not complete the 10th', () => {
+  const shots = [
+    { pinsBefore: 1023, pinsAfter: 0 },
+    { pinsBefore: 1023, pinsAfter: 64 },  // 7-pin left
+  ]
+  expect(isFrameComplete(shots, 9)).toBe(false)
+})
