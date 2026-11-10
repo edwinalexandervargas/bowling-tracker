@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { nextShotContext } from '../game/game'
 import { pinsStanding } from '../pins/pins'
+import { isFrameComplete } from '../scoring/frame'
+import { gameToRolls } from '../game/gameToRolls'
+import { score } from '../scoring/scorer'
 import { PinDeck } from './PinDeck'
 import { Scoresheet } from './Scoresheet'
 
@@ -18,6 +21,7 @@ export function ScoreEntry() {
   const startSession = useGameStore((s) => s.startSession)
   const startGame = useGameStore((s) => s.startGame)
   const recordShot = useGameStore((s) => s.recordShot)
+  const nextGame = useGameStore((s) => s.nextGame)
 
   const [error, setError] = useState<string | null>(null)
 
@@ -40,7 +44,27 @@ export function ScoreEntry() {
     )
   }
 
-  const { frameIndex } = activeEntry
+  const { frameIndex, gameIndex } = activeEntry
+
+  // Game is over when the 10th frame is complete (derived, not stored)
+  const isGameOver = isFrameComplete(game.frames[9]?.shots ?? [], 9)
+
+  if (isGameOver) {
+    return (
+      <div className="flex flex-col items-center gap-4 w-full">
+        <Scoresheet game={game} currentFrame={-1} />
+        <p className="text-gray-400">Game {gameIndex + 1} complete</p>
+        <p className="text-5xl font-bold">{score(gameToRolls(game))}</p>
+        <button
+          onClick={nextGame}
+          className="py-3 px-6 bg-blue-600 rounded-lg font-bold active:scale-95"
+        >
+          Next game
+        </button>
+      </div>
+    )
+  }
+
   const { pinsBefore, isFreshRack } = nextShotContext(game, frameIndex)
   const shotNumber = (game.frames[frameIndex]?.shots.length ?? 0) + 1
 
@@ -59,7 +83,7 @@ export function ScoreEntry() {
       <Scoresheet game={game} currentFrame={frameIndex} />
 
       <p className="text-lg">
-        Frame {frameIndex + 1} · Ball {shotNumber}
+        Game {gameIndex + 1} · Frame {frameIndex + 1} · Ball {shotNumber}
       </p>
       <p className="text-xs text-gray-400">
         {isFreshRack ? 'Fresh rack' : `Pins up: ${pinsStanding(pinsBefore).join(', ')}`}
