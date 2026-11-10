@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore'
 import { nextShotContext } from '../game/game'
 import { pinsStanding } from '../pins/pins'
 import { PinDeck } from './PinDeck'
+import { Scoresheet } from './Scoresheet'
 
 // Layer 3, step 1: connect the EXISTING PinDeck to the store.
 // PinDeck itself is unchanged; this component is the only thing that knows about Zustand.
@@ -54,7 +55,9 @@ export function ScoreEntry() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 w-full">
+      <Scoresheet game={game} currentFrame={frameIndex} />
+
       <p className="text-lg">
         Frame {frameIndex + 1} · Ball {shotNumber}
       </p>
