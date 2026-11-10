@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isPinStanding, pinsStanding, pinsKnockedDown } from './pins'
+import { isPinStanding, pinsStanding, pinsKnockedDown, isValidShot } from './pins'
 
 describe('isPinStanding', () => {
   it('says whether a pin is standing', () => {
@@ -23,5 +23,16 @@ describe('pinsKnockedDown', () => {
     expect(pinsKnockedDown(1023, 576)).toBe(8) // 576 = 7-pin + 10-pin left
     expect(pinsKnockedDown(1023, 0)).toBe(10) // strike
     expect(pinsKnockedDown(576, 512)).toBe(1) // 7-pin falls, 10-pin stays
+  })
+})
+
+describe('isValidShot', () => {
+  it('allows pins to fall but never to stand back up', () => {
+    expect(isValidShot(1023, 576)).toBe(true) // full rack → 7-10 split
+    expect(isValidShot(576, 512)).toBe(true)  // picked up the 7
+    expect(isValidShot(576, 0)).toBe(true)    // spare
+    expect(isValidShot(576, 576)).toBe(true)  // missed both
+    expect(isValidShot(576, 128)).toBe(false) // 8-pin was already down
+    expect(isValidShot(1023, 1024)).toBe(false) // out of range
   })
 })

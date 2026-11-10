@@ -17,3 +17,9 @@ export function pinsStanding(mask: number): number[] {
 export function pinsKnockedDown(before: number, after: number): number {
   return pinsStanding(before).length - pinsStanding(after).length
 }
+
+// A shot is valid if every pin standing after was also standing before.
+// (You can't stand a pin back up.)
+export function isValidShot(before: number, after: number): boolean {
+  return after >= 0 && after <= 1023 && (after & ~before) === 0
+}
