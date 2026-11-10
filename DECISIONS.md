@@ -1,5 +1,3 @@
-cat >> DECISIONS.md << 'EOF'
-
 ## Vitest as the test runner
 - **Decision:** Vitest.
 - **Alternatives:** Jest (needs extra config for TS/ESM in a Vite project).
@@ -75,3 +73,13 @@ cat >> DECISIONS.md << 'EOF'
   re-render. A pure helper fixes that, and it also keeps the shot rules (pinsBefore,
   10th-frame rack reset, rejecting extra or impossible shots) unit-testable and
   out of the state library. Tradeoff: more code up front.
+
+## Second-ball entry: Spare / Missed / partial tap
+- Decision: when the rack isn't fresh, PinDeck offers Spare (0 standing), Missed (pinsAfter = pinsBefore), or tapping the pins still up. Only pins in pinsBefore are tappable.
+- Alternatives: always tap what's left (more taps on the common spare/miss cases).
+- Why: one tap for the two most common outcomes. The data model doesn't change, because every option produces a pinsAfter mask.
+
+## Shortcut buttons are disabled once any pin is tapped
+- Decision: Strike / Spare / Missed are disabled while any pin is tapped; Confirm or Clear are the only ways forward.
+- Alternatives: shortcuts clear the taps and win (hides mistakes, skews spare stats); a confirm dialog (extra tap mid-game); hiding the buttons (layout jumps on mobile).
+- Why: tapped pins and a shortcut contradict each other, so the UI shouldn't allow both. Disabling keeps button positions stable.
