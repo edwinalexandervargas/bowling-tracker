@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { isFrameComplete } from '../scoring/frame'
-import type { Ball, Session, Pattern, BowlerProfile, Shot, Frame } from '../types'
+import { addShot } from '../game/game'
+import type { Ball, Session, Pattern, BowlerProfile, Game } from '../types'
 
 type GameEntry = {
   sessionId: string
@@ -54,6 +55,20 @@ function getActiveGame(state: AppState) {
   return session.games[entry.gameIndex] ?? null
 }
 
+// Helper: return NEW sessions with one game swapped out (never mutates)
+function replaceGame(
+  sessions: Session[],
+  sessionId: string,
+  gameIndex: number,
+  newGame: Game
+): Session[] {
+  return sessions.map((s) =>
+    s.id === sessionId
+      ? { ...s, games: s.games.map((g, i) => (i === gameIndex ? newGame : g)) }
+      : s
+  )
+}
+
 export const useGameStore = create<AppState>()(
   persist(
     (set, get) => ({
@@ -93,14 +108,15 @@ export const useGameStore = create<AppState>()(
         const session = state.sessions[state.sessions.length - 1]
         if (!session) return
 
-        const newGame = { id: crypto.randomUUID(), frames: [] }
-        session.games.push(newGame)
+        const newGame: Game = { id: crypto.randomUUID(), frames: [] }
 
         set({
-          sessions: [...state.sessions],
+          sessions: state.sessions.map((s) =>
+            s.id === session.id ? { ...s, games: [...s.games, newGame] } : s
+          ),
           activeEntry: {
             sessionId: session.id,
-            gameIndex: session.games.length - 1,
+            gameIndex: session.games.length, // old length = index of the new game
             frameIndex: 0,
             currentBallId: ballId,
           },
@@ -117,40 +133,17 @@ export const useGameStore = create<AppState>()(
         const game = getActiveGame(state)
         if (!game) return
 
-        const { frameIndex } = entry
-        let frame = game.frames[frameIndex]
+        // All shot rules live in the tested pure function
+        const newGame = addShot(game, entry.frameIndex, pinsAfter, entry.currentBallId)
 
-        // Create the frame if it doesn't exist yet
-        if (!frame) {
-          frame = { shots: [], ballId: entry.currentBallId }
-          game.frames[frameIndex] = frame
-        }
-
-        // First shot starts with full rack, second starts where first left off
-        const pinsBefore =
-          frame.shots.length === 0
-            ? 1023
-            : frame.shots[frame.shots.length - 1].pinsAfter
-
-        // 10th frame: reset pins after a strike or spare
-        const isTenth = frameIndex === 9
-        const lastShot = frame.shots[frame.shots.length - 1]
-        const pinsBeforeResolved =
-          isTenth && lastShot && lastShot.pinsAfter === 0
-            ? 1023
-            : pinsBefore
-
-        const shot: Shot = { pinsBefore: pinsBeforeResolved, pinsAfter }
-        frame.shots.push(shot)
-
-        // Use the tested helper for auto-advance
-        const complete = isFrameComplete(frame.shots, frameIndex)
-        const nextFrameIndex = complete && frameIndex < 9
-          ? frameIndex + 1
-          : frameIndex
+        // Auto-advance when the frame is done (frames 1-9 only)
+        const frame = newGame.frames[entry.frameIndex]
+        const complete = isFrameComplete(frame.shots, entry.frameIndex)
+        const nextFrameIndex =
+          complete && entry.frameIndex < 9 ? entry.frameIndex + 1 : entry.frameIndex
 
         set({
-          sessions: [...state.sessions],
+          sessions: replaceGame(state.sessions, entry.sessionId, entry.gameIndex, newGame),
           activeEntry: { ...entry, frameIndex: nextFrameIndex },
         })
       },
@@ -170,20 +163,22 @@ export const useGameStore = create<AppState>()(
         const game = getActiveGame(state)
         if (!game) return
 
-        const frame = game.frames[entry.frameIndex]
-        if (frame) {
-          frame.ballId = ballId
+        // New game with the current frame's ball swapped (if that frame exists yet)
+        const newGame: Game = {
+          ...game,
+          frames: game.frames.map((f, i) =>
+            i === entry.frameIndex ? { ...f, ballId } : f
+          ),
         }
 
         set({
-          sessions: [...state.sessions],
+          sessions: replaceGame(state.sessions, entry.sessionId, entry.gameIndex, newGame),
           activeEntry: { ...entry, currentBallId: ballId },
         })
       },
 
       nextGame: () => {
-        const state = get()
-        const entry = state.activeEntry
+        const entry = get().activeEntry
         if (!entry) return
         get().startGame(entry.currentBallId)
       },

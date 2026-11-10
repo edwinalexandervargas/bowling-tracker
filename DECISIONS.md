@@ -61,3 +61,17 @@ cat >> DECISIONS.md << 'EOF'
 - Decision: the Zustand store manages shot recording, frame navigation, and arsenal. Scoring (score, frameScores) is called by the UI at render time, not stored.
 - Alternatives: store computed scores alongside shots (duplicated state, can drift).
 - Why: scores are derived from shots. Computing at render keeps one source of truth.
+
+## Pin deck: tap what's left standing
+- Decision: all pins display as standing. The bowler taps only the pins still up after the shot, then confirms. Untapped pins are counted as knocked down. A strike is zero taps.
+- Alternatives: tap pins knocked down (more taps on good shots); drag to select (harder on a small phone screen).
+- Why: at the alley you're looking at what's left, not what you hit. Minimizes taps on the most common outcomes.
+
+## Shot recording is a pure function; the store stays thin
+- Decision: addShot(game, frameIndex, pinsAfter, ballId?) in src/game/ returns a
+  NEW Game and never mutates its input. The Zustand store calls it and saves the result.
+- Alternatives: manual spreads inside the store action; Immer middleware.
+- Why: the old recordShot mutated nested objects, so subscribed components didn't
+  re-render. A pure helper fixes that, and it also keeps the shot rules (pinsBefore,
+  10th-frame rack reset, rejecting extra or impossible shots) unit-testable and
+  out of the state library. Tradeoff: more code up front.
