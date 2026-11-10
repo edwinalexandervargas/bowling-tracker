@@ -1,39 +1,63 @@
-cat > DECISIONS.md << 'EOF'
-# Decisions Log
+cat >> DECISIONS.md << 'EOF'
 
-## Frontend stack: Vite + React + TS + Tailwind + Zustand
-- **Decision:** Vite, React, TypeScript, Tailwind, Zustand, built mobile-first as an installable PWA.
-- **Alternatives:** Next.js (SSR not needed for a mobile-first tracker), Redux (more boilerplate for this state size).
-- **Why:** Matches my existing skills, fast iteration, small footprint for an app used on a phone.
+## Vitest as the test runner
+- **Decision:** Vitest.
+- **Alternatives:** Jest (needs extra config for TS/ESM in a Vite project).
+- **Why:** It reuses the Vite config and handles TypeScript and ESM natively.
 
-## Backend: Supabase (Postgres)
-- **Decision:** Supabase for database and auth.
-- **Alternatives:** Firebase/Firestore (faster to start and I've used it before, but weaker for relational data and cross-game aggregates); local-first IndexedDB with later sync (more work than needed since offline isn't a requirement).
-- **Why:** The data is relational (session → games → shots, ball → layouts, pattern → sessions), so Postgres fits it directly. I haven't used Supabase before, so it broadens my stack, and I get schema design, constraints, and migrations to talk about in interviews.
-
-## Linter: ESLint
-- **Decision:** ESLint with typescript-eslint and react-hooks rules.
-- **Alternatives:** Oxlint (much faster, but fewer rules and no full type-aware linting yet).
-- **Why:** Most complete React/TS rule coverage and the standard in most codebases. Lint speed isn't a bottleneck at this project's size.
-
-## TypeScript pinned to 6.0.x
-- **Decision:** Pin TypeScript to ~6.0.3 instead of the 7.x the Vite template installed.
-- **Alternatives:** `--legacy-peer-deps` (hides the conflict, risks broken linting); wait for typescript-eslint to support TS 7.
-- **Why:** typescript-eslint's peer range excludes TS 7. Pinning keeps the linter supported and the install clean. Revisit when typescript-eslint adds TS 7 support.
-
-## Repo visibility: public
-- **Decision:** Public GitHub repo from the first commit.
-- **Alternatives:** Private while building, then switch to public later.
-- **Why:** It's a portfolio project, so commit history showing the work is part of the point. Secrets stay out of git through .env.local and the .gitignore.
-EOF
+## Scorer input is a flat list of pins knocked down per roll
+- **Decision:** score(rolls: number[]). Bitmask-to-pin-count conversion happens outside the scorer.
+- **Alternatives:** Structured Frame[] input (the scorer would need to know about frame structure and the 10th-frame exception up front).
+- **Why:** The scorer stays decoupled from the pin deck and bitmasks, and tests are just arrays of numbers.
 
 ## Scorer loops over frames with a roll pointer, not over rolls
-- Decision: for-loop over 10 frames, with an index `i` into the flat rolls array that advances by 1 (strike) or 2 (otherwise).
-- Alternatives: reduce over rolls (can't see frame boundaries); convert to Frame[] first (extra step, and the 10th frame still needs special handling).
-- Why: bonuses read ahead from `i`, and the frame count is fixed at 10, so the loop condition is simple and never runs past the game.
+- **Decision:** for-loop over 10 frames, with an index `i` into the flat rolls array that advances by 1 (strike) or 2 (otherwise).
+- **Alternatives:** reduce over rolls (can't see frame boundaries); convert to Frame[] first (extra step, and the 10th frame still needs special handling).
+- **Why:** Bonuses read ahead from `i`, and the frame count is fixed at 10, so the loop never runs past the game.
 
-## score() on unfinished games returns the last scorable total
-- Decision: score() returns the last entry of frameScores (0 if none), so partial games give a partial total instead of NaN.
-- Alternatives: throw on incomplete games; return null.
-- Why: the UI's scratch score reads the same function and a pending frame should never show NaN.
-- Risk: callers can't tell "finished" from "partial" by score() alone; check frameScores(rolls).length === 10.
+## 10th frame handled by the flat rolls array, no special case
+- **Decision:** No dedicated 10th-frame logic. Bonus rolls are read ahead from the flat array, and the loop stops at 10 frames. Strike (perfect game), spare, and open 10th are all tested.
+- **Alternatives:** Frame[] input with a special 10th-frame shape (up to 3 rolls).
+- **Why:** The bonus rolls are just the next entries in the array.
+
+## Live scratch score via frameScores; score() is a wrapper
+- **Decision:** frameScores(rolls) returns cumulative totals for scorable frames only. score() returns the last entry (0 if none).
+- **Alternatives:** Treat missing rolls as 0 (a pending strike shows 10, then jumps); make score() partial-aware.
+- **Why:** Matches an alley scoresheet, where a frame stays blank until its bonus rolls exist.
+- **Risk:** Callers can't tell "finished" from "partial" by score() alone; check frameScores(rolls).length === 10.
+
+## Roll validity is enforced by the pin deck, not the scorer
+- **Decision:** score() assumes every roll is valid (0-10, consistent with pins standing). The pin deck is the only producer of rolls.
+- **Alternatives:** Validate inside score() and throw; validate at the persistence boundary.
+- **Why:** The deck makes invalid rolls unrepresentable at input time.
+
+## Pins standing stored as a 10-bit bitmask
+- **Decision:** Pin N is bit N-1. 1 = standing, 0 = down. All standing = 1023, strike = 0.
+- **Alternatives:** Array of 10 booleans; array of pin numbers.
+- **Why:** One small integer per shot is compact to store, and leaves, splits, and conversions can be derived with bit operations.
+
+
+## Build order: UI before leave and split logic
+- Decision: after pinsKnockedDown, build the data model and score entry UI next. Leave names, split detection, and spare conversion come later, alongside the stats.
+- Alternatives: finish all pin logic first, then build UI.
+- Why: a working screen gives faster feedback and keeps momentum. Entry only needs pinsKnockedDown, and the stats are the only consumers of leave logic.
+
+## Offline-first, local storage now, Supabase later
+- Decision: phase 1 writes to Zustand persist (localStorage). Phase 2 adds Supabase for backup and sync.
+- Alternatives: Supabase from day one (blocked on setup, fails offline); IndexedDB (more storage, but heavier API for this data size).
+- Why: bowling alleys have bad signal, and a tap that doesn't save mid-game is unacceptable. Local-first means the app works before any backend exists.
+- Risk: localStorage caps at ~5 MB. Fine for a few seasons of league data, but worth monitoring.
+
+## Layout type supports three drilling systems
+- Decision: discriminated union on `system` field: '2ls', 'pin-buffer', 'traditional'. Each branch carries only its own measurements.
+- Alternatives: one flat type with optional fields for every system (no compile-time safety); separate Ball types per system.
+- Why: TypeScript enforces that only the right fields exist per system, so you can't set pinToCog on a traditional layout.
+
+## Surface lives on Ball, not Layout
+- Decision: surface is a Ball field, not a Layout field.
+- Why: you can change surface without redrilling. They have different lifecycles.
+
+## Store records shots; scoring stays in pure functions
+- Decision: the Zustand store manages shot recording, frame navigation, and arsenal. Scoring (score, frameScores) is called by the UI at render time, not stored.
+- Alternatives: store computed scores alongside shots (duplicated state, can drift).
+- Why: scores are derived from shots. Computing at render keeps one source of truth.

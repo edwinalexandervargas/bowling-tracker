@@ -1,75 +1,85 @@
-import { describe, it, expect } from "vitest";
-import { score, frameScores } from "./scorer";
+import { describe, it, expect } from 'vitest'
+import { isFrameComplete } from './frame'
 
-describe("score", () => {
-  it("scores a gutter game as 0", () => {
-    const rolls = Array(20).fill(0);
-    const result = score(rolls);
-    expect(result).toBe(0);
-  });
+describe('isFrameComplete', () => {
+  // --- Frames 1-9 ---
 
-  it("scores 1 pin per roll", () => {
-    const rolls = Array(20).fill(1);
-    const result = score(rolls);
-    expect(result).toBe(20);
-  });
+  it('an empty frame is not complete', () => {
+    expect(isFrameComplete([], 0)).toBe(false)
+  })
 
-  it("adds the next roll as a bonus after a spare", () => {
-    const rolls = [5, 5, 3, ...Array(17).fill(0)];
-    const result = score(rolls);
-    expect(result).toBe(16);
-  });
+  it('one non-strike shot does not complete frames 1-9', () => {
+    const shots = [{ pinsBefore: 1023, pinsAfter: 576 }]
+    expect(isFrameComplete(shots, 0)).toBe(false)
+  })
 
-  it("adds the next two rolls as a bonus after a strike", () => {
-    const rolls = [10, 3, 4, ...Array(16).fill(0)];
-    const result = score(rolls);
-    expect(result).toBe(24);
-  });
+  it('a strike completes frames 1-9', () => {
+    const shots = [{ pinsBefore: 1023, pinsAfter: 0 }]
+    expect(isFrameComplete(shots, 0)).toBe(true)
+  })
 
-  it("scores a perfect game as 300", () => {
-    const rolls = Array(12).fill(10);
-    const result = score(rolls);
-    expect(result).toBe(300);
-  });
+  it('a spare completes frames 1-9', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 576 },
+      { pinsBefore: 576, pinsAfter: 0 },
+    ]
+    expect(isFrameComplete(shots, 0)).toBe(true)
+  })
 
-  it("scores a spare in the 10th frame with its bonus roll", () => {
-    const rolls = [...Array(18).fill(0), 5, 5, 7];
-    const result = score(rolls);
-    expect(result).toBe(17);
-  });
+  it('an open frame completes frames 1-9', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 576 },
+      { pinsBefore: 576, pinsAfter: 512 },
+    ]
+    expect(isFrameComplete(shots, 0)).toBe(true)
+  })
 
-  it("open frame in the 10th frame", () => {
-    const rolls = [...Array(18).fill(0), 5, 3];
-    const result = score(rolls);
-    expect(result).toBe(8);
-  });
+  // --- 10th frame ---
 
-  it("scores a mixed game", () => {
-    const rolls = [10, 9, 1, 5, 5, 7, 2, 10, 10, 10, 9, 0, 8, 2, 9, 1, 10];
-    expect(score(rolls)).toBe(187);
-  });
-  it("score equals the last frameScores entry for a finished game", () => {
-    const rolls = [10, 9, 1, 5, 5, 7, 2, 10, 10, 10, 9, 0, 8, 2, 9, 1, 10];
-    const totals = frameScores(rolls);
-    expect(totals).toHaveLength(10);
-    expect(totals[9]).toBe(score(rolls));
-  });
-});
+  it('a strike does not complete the 10th frame', () => {
+    const shots = [{ pinsBefore: 1023, pinsAfter: 0 }]
+    expect(isFrameComplete(shots, 9)).toBe(false)
+  })
 
-describe("frameScores", () => {
-  it("returns nothing when a strike has no bonus rolls yet", () => {
-    expect(frameScores([10])).toEqual([]);
-  });
+  it('a strike then a non-clearing shot does not complete the 10th', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 0 },
+      { pinsBefore: 1023, pinsAfter: 64 },  // 7-pin left after bonus ball 1
+    ]
+    expect(isFrameComplete(shots, 9)).toBe(false)
+  })
 
-  it("scores an open frame immediately", () => {
-    expect(frameScores([3, 4])).toEqual([7]);
-  });
+  it('an open frame completes the 10th', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 576 },
+      { pinsBefore: 576, pinsAfter: 512 },
+    ]
+    expect(isFrameComplete(shots, 9)).toBe(true)
+  })
 
-  it("leaves a spare pending until its bonus roll exists", () => {
-    expect(frameScores([10, 7, 3])).toEqual([20]);
-  });
+  it('three strikes complete the 10th frame', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 0 },
+      { pinsBefore: 1023, pinsAfter: 0 },
+      { pinsBefore: 1023, pinsAfter: 0 },
+    ]
+    expect(isFrameComplete(shots, 9)).toBe(true)
+  })
 
-  it("scores the spare once the bonus roll arrives", () => {
-    expect(frameScores([10, 7, 3, 4])).toEqual([20, 34]);
-  });
-});
+  it('a spare with a bonus shot completes the 10th', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 576 },
+      { pinsBefore: 576, pinsAfter: 0 },
+      { pinsBefore: 1023, pinsAfter: 512 },
+    ]
+    expect(isFrameComplete(shots, 9)).toBe(true)
+  })
+
+  it('a spare without a bonus shot does not complete the 10th', () => {
+    const shots = [
+      { pinsBefore: 1023, pinsAfter: 576 },
+      { pinsBefore: 576, pinsAfter: 0 },
+    ]
+    expect(isFrameComplete(shots, 9)).toBe(false)
+  })
+})
