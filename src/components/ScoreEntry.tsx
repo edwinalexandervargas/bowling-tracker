@@ -22,6 +22,7 @@ export function ScoreEntry() {
   const startGame = useGameStore((s) => s.startGame)
   const recordShot = useGameStore((s) => s.recordShot)
   const nextGame = useGameStore((s) => s.nextGame)
+  const undoShot = useGameStore((s) => s.undoShot)
 
   const [error, setError] = useState<string | null>(null)
 
@@ -61,6 +62,15 @@ export function ScoreEntry() {
         >
           Next game
         </button>
+        <button
+          onClick={() => {
+            undoShot()
+            setError(null)
+          }}
+          className="text-sm text-gray-400 underline"
+        >
+          Undo last shot
+        </button>
       </div>
     )
   }
@@ -98,6 +108,18 @@ export function ScoreEntry() {
       />
 
       {error && <p className="text-sm text-red-400">{error}</p>}
+
+      {game.frames.length > 0 && (
+          <button
+            onClick={() => {
+              undoShot()
+              setError(null)
+            }}
+            className="text-sm text-gray-400 underline"
+          >
+            Undo last shot
+          </button>
+      )}
     </div>
   )
 }

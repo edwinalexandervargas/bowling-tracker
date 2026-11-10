@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { isFrameComplete } from '../scoring/frame'
 import { addShot } from '../game/game'
+import { removeLastShot } from '../game/removeLastShot'
 import type { Ball, Session, Pattern, BowlerProfile, Game } from '../types'
 
 type GameEntry = {
@@ -39,6 +40,7 @@ type AppState = {
 
   // Entry flow
   recordShot: (pinsAfter: number) => void
+  undoShot: () => void
   goToFrame: (frameIndex: number) => void
   changeBall: (ballId: string) => void
   nextGame: () => void
@@ -145,6 +147,24 @@ export const useGameStore = create<AppState>()(
         set({
           sessions: replaceGame(state.sessions, entry.sessionId, entry.gameIndex, newGame),
           activeEntry: { ...entry, frameIndex: nextFrameIndex },
+        })
+      },
+
+      undoShot: () => {
+        const state = get()
+        const entry = state.activeEntry
+        if (!entry) return
+
+        const game = getActiveGame(state)
+        if (!game || game.frames.length === 0) return
+
+        // The undone shot lived in the last frame, so that's where the next ball goes
+        const frameOfUndoneShot = game.frames.length - 1
+        const newGame = removeLastShot(game)
+
+        set({
+          sessions: replaceGame(state.sessions, entry.sessionId, entry.gameIndex, newGame),
+          activeEntry: { ...entry, frameIndex: frameOfUndoneShot },
         })
       },
 
