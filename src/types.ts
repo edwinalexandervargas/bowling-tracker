@@ -82,9 +82,10 @@ export type Session =
 export type Pattern = {
   id: string
   name: string           // e.g. "Kegel Middle Road"
-  length: number         // feet
-  ratio?: number         // e.g. 3.5
-  volume?: string        // e.g. "High", or ml
+  length: number         // feet, e.g. 41
+  ratio?: number         // the "3.2" in 3.2:1
+  volume?: number        // total oil in mL, e.g. 24.5
+  notes?: string         // free text, e.g. "house shot", "heavy"
 }
 
 export type BowlerProfile = {
