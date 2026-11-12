@@ -8,6 +8,7 @@ import { score } from '../scoring/scorer'
 import { PinDeck } from './PinDeck'
 import { Scoresheet } from './Scoresheet'
 import { BallPicker } from './BallPicker'
+import { SessionSetup } from './SessionSetup'
 
 // Layer 3, step 1: connect the EXISTING PinDeck to the store.
 // PinDeck itself is unchanged; this component is the only thing that knows about Zustand.
@@ -19,8 +20,6 @@ export function ScoreEntry() {
     if (!e) return null
     return s.sessions.find((x) => x.id === e.sessionId)?.games[e.gameIndex] ?? null
   })
-  const startSession = useGameStore((s) => s.startSession)
-  const startGame = useGameStore((s) => s.startGame)
   const recordShot = useGameStore((s) => s.recordShot)
   const nextGame = useGameStore((s) => s.nextGame)
   const undoShot = useGameStore((s) => s.undoShot)
@@ -30,23 +29,8 @@ export function ScoreEntry() {
 
   const [error, setError] = useState<string | null>(null)
 
-  // Temporary dev entry point until the session-setup screen exists
-  const handleStart = () => {
-    startSession({
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      type: 'practice',
-      games: [],
-    })
-    startGame()
-  }
-
   if (!activeEntry || !game) {
-    return (
-      <button onClick={handleStart} className="py-3 px-6 bg-blue-600 rounded-lg font-bold">
-        Start practice game
-      </button>
-    )
+    return <SessionSetup />
   }
 
   const { frameIndex, gameIndex } = activeEntry

@@ -109,3 +109,13 @@
 - Decision: Pattern has kind 'house' | 'sport'. Sport requires length; house shot needs only a name, numbers optional.
 - Alternatives: make length optional for everything (loses the guarantee that sport patterns have a length); a separate HouseShot type (two lists to manage, sessions would need two kinds of pattern reference).
 - Why: league nights are usually on an unpublished house shot. The union keeps one patterns list while TypeScript still enforces length on sport patterns.
+
+## Sessions: no pattern picked means house shot
+- Decision: patternId is optional on every session type. Blank = house shot; per-pattern stats bucket these as "House shot".
+- Alternatives: require a pattern for league/tournament (forces adding a "THS" pattern first, extra taps at the alley); create a default House pattern record (a hidden fake row in the patterns list).
+- Why: league nights are almost always on an unpublished house shot, so the default should cost zero taps. A sport pattern is only picked when one is actually published.
+
+## Session pattern picker is a native <select>
+- Decision: native <select> with "House shot" as the first option (value '').
+- Alternatives: custom dropdown or bottom sheet (more code, accessibility work); tappable pattern cards (don't scale past a few patterns).
+- Why: on mobile the OS picker is large, accessible, and free. Revisit if pattern details need to show while picking.
