@@ -83,3 +83,9 @@
 - Decision: Strike / Spare / Missed are disabled while any pin is tapped; Confirm or Clear are the only ways forward.
 - Alternatives: shortcuts clear the taps and win (hides mistakes, skews spare stats); a confirm dialog (extra tap mid-game); hiding the buttons (layout jumps on mobile).
 - Why: tapped pins and a shortcut contradict each other, so the UI shouldn't allow both. Disabling keeps button positions stable.
+
+
+## Ball specs API is a separate project
+- Decision: no external ball-spec API in this app. Specs are entered manually for now, and a standalone specs API (own repo) comes after step 7.
+- Alternatives: scrape retailer/database sites (terms-of-use risk, brittle); build the API now (stalls the app); use an existing public API (none found).
+- Why: the app must work offline at the alley, so an API would only ever seed specs. Keeping it separate keeps step 4 small and gives a second portfolio repo.
