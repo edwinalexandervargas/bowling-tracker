@@ -119,3 +119,9 @@
 - Decision: native <select> with "House shot" as the first option (value '').
 - Alternatives: custom dropdown or bottom sheet (more code, accessibility work); tappable pattern cards (don't scale past a few patterns).
 - Why: on mobile the OS picker is large, accessible, and free. Revisit if pattern details need to show while picking.
+
+
+## Pattern import: drop CSV/JSON, screenshots after the backend
+- Decision: manual entry only for now. Screenshot import (vision API fills the manual form as a draft for review) comes once Supabase exists. CSV/JSON import is dropped.
+- Alternatives: CSV/JSON import (patterns are almost never published that way); vision API now (pulls backend setup ahead of stats); Tesseract.js OCR (unreliable on graph-heavy pattern sheets); attach screenshot to pattern (images too big for localStorage).
+- Why: a pattern is about four numbers entered at home, so manual entry is cheap. Stats and the dashboard deliver more value first, and the vision import becomes a small add-on once a server function can hold the API key.
