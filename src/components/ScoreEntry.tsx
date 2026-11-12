@@ -7,6 +7,7 @@ import { gameToRolls } from '../game/gameToRolls'
 import { score } from '../scoring/scorer'
 import { PinDeck } from './PinDeck'
 import { Scoresheet } from './Scoresheet'
+import { BallPicker } from './BallPicker'
 
 // Layer 3, step 1: connect the EXISTING PinDeck to the store.
 // PinDeck itself is unchanged; this component is the only thing that knows about Zustand.
@@ -23,6 +24,9 @@ export function ScoreEntry() {
   const recordShot = useGameStore((s) => s.recordShot)
   const nextGame = useGameStore((s) => s.nextGame)
   const undoShot = useGameStore((s) => s.undoShot)
+  const balls = useGameStore((s) => s.balls)
+  const ballSpecs = useGameStore((s) => s.ballSpecs)
+  const changeBall = useGameStore((s) => s.changeBall)
 
   const [error, setError] = useState<string | null>(null)
 
@@ -95,6 +99,13 @@ export function ScoreEntry() {
       <p className="text-lg">
         Game {gameIndex + 1} · Frame {frameIndex + 1} · Ball {shotNumber}
       </p>
+      <BallPicker
+        balls={balls}
+        ballSpecs={ballSpecs}
+        currentBallId={activeEntry.currentBallId}
+        onChange={changeBall}
+      />
+
       <p className="text-xs text-gray-400">
         {isFreshRack ? 'Fresh rack' : `Pins up: ${pinsStanding(pinsBefore).join(', ')}`}
       </p>
