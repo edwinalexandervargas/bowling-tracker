@@ -1,20 +1,16 @@
+// Every layout is three numbers, in the order the driller writes them.
+// Distances are decimal inches (see src/measure/inches.ts); angles are degrees.
 export type Layout =
   | {
-      system: '2ls'
-      pinToPap: number
-      pinToCog: number
-      psaToPap: number
-    }
-  | {
-      system: 'pin-buffer'
+      system: '2ls'          // e.g. 5 x 4 x 3
       pinToPap: number
       psaToPap: number
       pinBuffer: number
     }
   | {
-      system: 'traditional'
-      pinToPap: number
+      system: 'dual-angle'   // e.g. 45° x 4 1/2 x 30°
       drillingAngle: number
+      pinToPap: number
       valAngle: number
     }
 
