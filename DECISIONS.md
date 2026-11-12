@@ -125,3 +125,9 @@
 - Decision: manual entry only for now. Screenshot import (vision API fills the manual form as a draft for review) comes once Supabase exists. CSV/JSON import is dropped.
 - Alternatives: CSV/JSON import (patterns are almost never published that way); vision API now (pulls backend setup ahead of stats); Tesseract.js OCR (unreliable on graph-heavy pattern sheets); attach screenshot to pattern (images too big for localStorage).
 - Why: a pattern is about four numbers entered at home, so manual entry is cheap. Stats and the dashboard deliver more value first, and the vision import becomes a small add-on once a server function can hold the API key.
+
+
+## Strike % counts every fresh rack (12 chances in a perfect game)
+- Decision: a strike chance is any shot thrown at a full rack, including 10th-frame fill balls. Stats start from firstBalls(game): one entry per fresh rack with its leave and whether it was converted.
+- Alternatives: one chance per frame (10 per game; hides 10th-frame fill balls).
+- Why: counts every shot where a strike was possible, which matches league software. Working per rack instead of per frame also makes the 10th frame need no special case.
