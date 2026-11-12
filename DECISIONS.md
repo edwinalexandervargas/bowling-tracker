@@ -89,3 +89,23 @@
 - Decision: no external ball-spec API in this app. Specs are entered manually for now, and a standalone specs API (own repo) comes after step 7.
 - Alternatives: scrape retailer/database sites (terms-of-use risk, brittle); build the API now (stalls the app); use an existing public API (none found).
 - Why: the app must work offline at the alley, so an API would only ever seed specs. Keeping it separate keeps step 4 small and gives a second portfolio repo.
+
+## Layouts: two systems, three numbers each
+- Decision: Layout is '2ls' (pin-to-PAP × PSA-to-PAP × pin buffer, inches) or 'dual-angle' (drilling angle° × pin-to-PAP" × VAL angle°). Fields are ordered the way drillers write them.
+- Alternatives: four systems including pin-buffer and traditional (more surface area than needed; pin-buffer merges into 2LS); free-text layout string (no per-system validation or stats).
+- Why: matches how my layouts are written. The discriminated union still enforces per-system fields.
+
+## Pattern volume is numeric mL, with free-text notes
+- Decision: volume?: number (total oil, mL); ratio?: number (the X in X:1); notes?: string for anything else.
+- Alternatives: volume as a string ("High", "24.5") — can't sort, compare or chart, and "High"/"heavy" split stats.
+- Why: per-pattern stats need numbers. Notes keeps the freedom without polluting the numeric field.
+
+## Pattern input: manual first, then CSV/JSON, screenshots later
+- Decision: manual entry form now; CSV/JSON import next; screenshot import via a vision API once the backend exists. Every import fills the manual form as a draft for review.
+- Alternatives: browser OCR (Tesseract.js: offline, but fragile per-layout parsing); vision API now (needs a backend for the API key, online only).
+- Why: the form is the shared landing spot for every input method, and extracted numbers are never saved without a human check.
+
+## Patterns: house shot vs sport
+- Decision: Pattern has kind 'house' | 'sport'. Sport requires length; house shot needs only a name, numbers optional.
+- Alternatives: make length optional for everything (loses the guarantee that sport patterns have a length); a separate HouseShot type (two lists to manage, sessions would need two kinds of pattern reference).
+- Why: league nights are usually on an unpublished house shot. The union keeps one patterns list while TypeScript still enforces length on sport patterns.
