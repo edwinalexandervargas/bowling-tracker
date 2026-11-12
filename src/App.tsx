@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider, Outlet } from 'react-router'
 import { BottomNav } from './components/BottomNav'
 import { ScoreScreen } from './screens/ScoreScreen'
 import { ArsenalScreen } from './screens/ArsenalScreen'
+import { AddBallScreen } from './screens/AddBallScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 
 function Layout() {
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <ScoreScreen /> },
       { path: '/arsenal', element: <ArsenalScreen /> },
+      { path: '/arsenal/new', element: <AddBallScreen /> },
       { path: '/profile', element: <ProfileScreen /> },
     ],
   },
