@@ -4,6 +4,7 @@ import { ScoreScreen } from './screens/ScoreScreen'
 import { ArsenalScreen } from './screens/ArsenalScreen'
 import { AddBallScreen } from './screens/AddBallScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
+import { PatternsScreen } from './screens/PatternsScreen'
 
 function Layout() {
   return (
@@ -21,6 +22,7 @@ const router = createBrowserRouter([
       { path: '/', element: <ScoreScreen /> },
       { path: '/arsenal', element: <ArsenalScreen /> },
       { path: '/arsenal/new', element: <AddBallScreen /> },
+      { path: '/patterns', element: <PatternsScreen /> },
       { path: '/profile', element: <ProfileScreen /> },
     ],
   },

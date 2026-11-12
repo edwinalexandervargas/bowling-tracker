@@ -79,14 +79,18 @@ export type Session =
       games: Game[]
     }
 
+// House shot: just a name (e.g. "Pinz house"), numbers optional if known.
+// Sport/named pattern: length required.
 export type Pattern = {
   id: string
-  name: string           // e.g. "Kegel Middle Road"
-  length: number         // feet, e.g. 41
+  name: string           // e.g. "Kegel Middle Road", "Pinz house"
   ratio?: number         // the "3.2" in 3.2:1
   volume?: number        // total oil in mL, e.g. 24.5
-  notes?: string         // free text, e.g. "house shot", "heavy"
-}
+  notes?: string         // free text
+} & (
+  | { kind: 'house'; length?: number }   // feet, optional
+  | { kind: 'sport'; length: number }    // feet, required
+)
 
 export type BowlerProfile = {
   papOver: number        // inches, horizontal
