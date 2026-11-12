@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { isFrameComplete } from '../scoring/frame'
 import { addShot } from '../game/game'
 import { removeLastShot } from '../game/removeLastShot'
-import type { Ball, Session, Pattern, BowlerProfile, Game } from '../types'
+import type { Ball, BallSpec, Session, Pattern, BowlerProfile, Game } from '../types'
 
 type GameEntry = {
   sessionId: string
@@ -15,6 +15,7 @@ type GameEntry = {
 type AppState = {
   // Data
   profile: BowlerProfile | null
+  ballSpecs: BallSpec[]
   balls: Ball[]
   sessions: Session[]
   patterns: Pattern[]
@@ -26,6 +27,7 @@ type AppState = {
   setProfile: (profile: BowlerProfile) => void
 
   // Arsenal
+  addBallSpec: (spec: BallSpec) => void
   addBall: (ball: Ball) => void
   updateBall: (id: string, updates: Partial<Ball>) => void
   removeBall: (id: string) => void
@@ -75,12 +77,16 @@ export const useGameStore = create<AppState>()(
   persist(
     (set, get) => ({
       profile: null,
+      ballSpecs: [],
       balls: [],
       sessions: [],
       patterns: [],
       activeEntry: null,
 
       setProfile: (profile) => set({ profile }),
+
+      addBallSpec: (spec) =>
+        set((state) => ({ ballSpecs: [...state.ballSpecs, spec] })),
 
       addBall: (ball) =>
         set((state) => ({ balls: [...state.balls, ball] })),

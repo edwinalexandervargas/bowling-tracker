@@ -18,10 +18,24 @@ export type Layout =
       valAngle: number
     }
 
-export type Ball = {
+// The ball model: same for every copy ever made. Manual entry now; a specs API could fill these later.
+export type BallSpec = {
   id: string
   name: string           // e.g. "Phase II"
-  brand?: string
+  brand: string          // e.g. "Storm"
+  rg?: number            // e.g. 2.48
+  differential?: number  // e.g. 0.051
+  massBiasDiff?: number  // asymmetric balls only
+  coverstock?: string
+  core?: string
+}
+
+// Your physical copy: points at its spec, carries its own drilling and surface.
+export type Ball = {
+  id: string
+  specId: string         // -> BallSpec.id
+  nickname?: string      // e.g. "Phase II #2" when you own two
+  weight?: number        // lbs
   layout: Layout
   surface: string        // e.g. "500 Polished", "2000 Abralon"
 }
