@@ -93,5 +93,5 @@ export type Pattern = {
 
 export type BowlerProfile = {
   papOver: number        // inches, horizontal
-  papUp: number          // inches, vertical
+  papUp: number          // inches, vertical: positive = up, negative = down
 }
