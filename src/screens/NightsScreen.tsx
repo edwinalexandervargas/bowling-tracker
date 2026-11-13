@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router'
 import { useGameStore } from '../store/gameStore'
 import { nights } from '../stats/slices'
 import { pct, fmtPct } from '../stats/stats'
@@ -19,7 +20,8 @@ export function NightsScreen() {
         {rows.map(({ session, scores, series, shots }) => {
           const pattern = patterns.find((p) => p.id === session.patternId)
           return (
-            <li key={session.id} className="rounded bg-gray-800 p-3 space-y-2">
+            <li key={session.id}>
+              <Link to={`/nights/${session.id}`} className="block rounded bg-gray-800 p-3 space-y-2 active:bg-gray-700">
               <div className="flex items-baseline justify-between">
                 <p className="font-medium">{session.eventName ?? TYPE_LABEL[session.type]}</p>
                 <p className="text-xs text-gray-400">
@@ -45,6 +47,7 @@ export function NightsScreen() {
                 Strike {fmtPct(pct(shots.strikes, shots.strikeChances)) ?? '—'} · Spare{' '}
                 {fmtPct(pct(shots.spares, shots.spareChances)) ?? '—'} · Opens {shots.openFrames}
               </p>
+              </Link>
             </li>
           )
         })}

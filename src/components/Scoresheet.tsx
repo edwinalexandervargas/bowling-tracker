@@ -2,12 +2,15 @@ import type { Game, Shot } from '../types'
 import { pinsKnockedDown } from '../pins/pins'
 import { gameToRolls } from '../game/gameToRolls'
 import { frameScores } from '../scoring/scorer'
+import { isSplit, leaveName } from '../pins/leaves'
+import { frameFirstBalls } from '../stats/firstBalls'
 
 const FULL_RACK = 1023
 
 type ScoresheetProps = {
   game: Game
   currentFrame: number
+  showLeaves?: boolean // extra row under each frame with the pins left after the first ball
 }
 
 // Display mark for one shot, like an alley scoresheet:
@@ -19,7 +22,12 @@ function shotMark(shot: Shot): string {
   return count === 0 ? '-' : String(count)
 }
 
-export function Scoresheet({ game, currentFrame }: ScoresheetProps) {
+// First ball at a full rack that left a split
+function isSplitShot(shot: Shot): boolean {
+  return shot.pinsBefore === FULL_RACK && isSplit(shot.pinsAfter)
+}
+
+export function Scoresheet({ game, currentFrame, showLeaves = false }: ScoresheetProps) {
   // Running totals for scorable frames only (blank until bonus balls exist)
   const totals = frameScores(gameToRolls(game))
 
@@ -41,11 +49,31 @@ export function Scoresheet({ game, currentFrame }: ScoresheetProps) {
             <div className="flex justify-end text-xs h-5">
               {Array.from({ length: slots }, (_, s) => (
                 <span key={s} className="flex-1 border-l border-gray-700 first:border-l-0">
-                  {shots[s] ? shotMark(shots[s]) : ''}
+                  {shots[s] &&
+                    (isSplitShot(shots[s]) ? (
+                      // Splits are circled, like on a paper sheet
+                      <span className="inline-block w-4 h-4 leading-4 rounded-full ring-1 ring-red-400">
+                        {shotMark(shots[s])}
+                      </span>
+                    ) : (
+                      shotMark(shots[s])
+                    ))}
                 </span>
               ))}
             </div>
             <div className="text-sm font-bold h-6">{totals[i] ?? ''}</div>
+            {showLeaves && (
+              <div className="min-h-6 border-t border-gray-700 px-px text-[9px] leading-tight break-all">
+                {game.frames[i] &&
+                  frameFirstBalls(game.frames[i], i)
+                    .filter((b) => b.leave !== 0)
+                    .map((b, k) => (
+                      <div key={k} className={isSplit(b.leave) ? 'text-red-400' : 'text-gray-300'}>
+                        {leaveName(b.leave)}
+                      </div>
+                    ))}
+              </div>
+            )}
           </div>
         )
       })}

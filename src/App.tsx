@@ -7,6 +7,7 @@ import { ProfileScreen } from './screens/ProfileScreen'
 import { PatternsScreen } from './screens/PatternsScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { NightsScreen } from './screens/NightsScreen'
+import { NightDetailScreen } from './screens/NightDetailScreen'
 
 function Layout() {
   return (
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <ScoreScreen /> },
       { path: '/nights', element: <NightsScreen /> },
+      { path: '/nights/:sessionId', element: <NightDetailScreen /> },
       { path: '/stats', element: <StatsScreen /> },
       { path: '/arsenal', element: <ArsenalScreen /> },
       { path: '/arsenal/new', element: <AddBallScreen /> },
