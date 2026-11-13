@@ -3,8 +3,7 @@ import { Link, useParams } from 'react-router'
 import { useGameStore } from '../store/gameStore'
 import { Scoresheet } from '../components/Scoresheet'
 import { StatTile } from '../components/StatTile'
-import { gameScore, leaveStats, pct, fmtPct, shotStats } from '../stats/stats'
-import { isSplit, leaveName } from '../pins/leaves'
+import { gameScore, pct, fmtPct, shotStats } from '../stats/stats'
 
 const TYPE_LABEL = { league: 'League', tournament: 'Tournament', practice: 'Practice' } as const
 
@@ -16,7 +15,6 @@ export function NightDetailScreen() {
 
   const frames = useMemo(() => session?.games.flatMap((g) => g.frames) ?? [], [session])
   const shots = useMemo(() => shotStats(frames), [frames])
-  const leaves = useMemo(() => leaveStats(frames), [frames])
 
   if (!session) {
     return (
@@ -65,28 +63,6 @@ export function NightDetailScreen() {
         <StatTile label="Splits" value={shots.splits} sub={`${shots.splitsConverted} made`} />
       </section>
 
-      {leaves.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="text-lg font-semibold">Leaves tonight</h2>
-          <table className="w-full text-sm">
-            <thead className="text-gray-400">
-              <tr><th className="text-left font-normal">Leave</th><th className="font-normal">Left</th><th className="font-normal">Made</th></tr>
-            </thead>
-            <tbody>
-              {leaves.map((l) => (
-                <tr key={l.leave} className="border-t border-gray-800 text-center">
-                  <td className="py-1 text-left">
-                    {leaveName(l.leave)}
-                    {isSplit(l.leave) && <span className="ml-2 text-xs text-red-400">split</span>}
-                  </td>
-                  <td>{l.attempts}</td>
-                  <td>{l.converted}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
     </div>
   )
 }

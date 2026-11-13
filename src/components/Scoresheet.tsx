@@ -2,7 +2,8 @@ import type { Game, Shot } from '../types'
 import { pinsKnockedDown } from '../pins/pins'
 import { gameToRolls } from '../game/gameToRolls'
 import { frameScores } from '../scoring/scorer'
-import { isSplit, leaveName } from '../pins/leaves'
+import { isSplit } from '../pins/leaves'
+import { MiniDeck } from './MiniDeck'
 import { frameFirstBalls } from '../stats/firstBalls'
 
 const FULL_RACK = 1023
@@ -63,15 +64,11 @@ export function Scoresheet({ game, currentFrame, showLeaves = false }: Scoreshee
             </div>
             <div className="text-sm font-bold h-6">{totals[i] ?? ''}</div>
             {showLeaves && (
-              <div className="min-h-6 border-t border-gray-700 px-px text-[9px] leading-tight break-all">
+              <div className="min-h-5 border-t border-gray-700 py-0.5 space-y-0.5">
                 {game.frames[i] &&
                   frameFirstBalls(game.frames[i], i)
                     .filter((b) => b.leave !== 0)
-                    .map((b, k) => (
-                      <div key={k} className={isSplit(b.leave) ? 'text-red-400' : 'text-gray-300'}>
-                        {leaveName(b.leave)}
-                      </div>
-                    ))}
+                    .map((b, k) => <MiniDeck key={k} leave={b.leave} />)}
               </div>
             )}
           </div>

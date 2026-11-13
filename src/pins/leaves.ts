@@ -5,7 +5,7 @@ import { isPinStanding, pinsStanding } from './pins'
 //          4   5   6         y=2
 //            2   3           y=1
 //              1             y=0
-const POS: Record<number, { x: number; y: number }> = {
+export const PIN_POSITIONS: Record<number, { x: number; y: number }> = {
   1: { x: 0, y: 0 },
   2: { x: -1, y: 1 }, 3: { x: 1, y: 1 },
   4: { x: -2, y: 2 }, 5: { x: 0, y: 2 }, 6: { x: 2, y: 2 },
@@ -15,8 +15,8 @@ const POS: Record<number, { x: number; y: number }> = {
 // Two pins "touch" (no gap between them) when they are side by side in a row,
 // diagonal neighbours, or one directly behind the other (a sleeper, e.g. 2-8).
 function touching(a: number, b: number): boolean {
-  const dx = Math.abs(POS[a].x - POS[b].x)
-  const dy = Math.abs(POS[a].y - POS[b].y)
+  const dx = Math.abs(PIN_POSITIONS[a].x - PIN_POSITIONS[b].x)
+  const dy = Math.abs(PIN_POSITIONS[a].y - PIN_POSITIONS[b].y)
   return (dy === 0 && dx === 2) || (dy === 1 && dx === 1) || (dy === 2 && dx === 0)
 }
 
