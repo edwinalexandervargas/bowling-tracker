@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { summarize, byPattern, byBall } from '../stats/slices'
-import { leaveStats, pct, fmtPct } from '../stats/stats'
-import { isSplit, leaveName } from '../pins/leaves'
+import { pct, fmtPct } from '../stats/stats'
 import { ballName } from '../arsenal/ballLabel'
 import { StatTile } from '../components/StatTile'
 
@@ -16,10 +15,6 @@ export function StatsScreen() {
   const overall = useMemo(() => summarize(sessions), [sessions])
   const patternRows = useMemo(() => byPattern(sessions, patterns), [sessions, patterns])
   const ballRows = useMemo(() => byBall(sessions), [sessions])
-  const leaves = useMemo(
-    () => leaveStats(sessions.flatMap((s) => s.games.flatMap((g) => g.frames))),
-    [sessions],
-  )
 
   const { score, shots } = overall
 
@@ -91,31 +86,6 @@ export function StatsScreen() {
         )}
       </section>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Leaves</h2>
-        {leaves.length === 0 ? (
-          <p className="text-sm text-gray-400">No leaves yet.</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="text-gray-400">
-              <tr><th className="text-left font-normal">Leave</th><th className="font-normal">Left</th><th className="font-normal">Made</th><th className="font-normal">%</th></tr>
-            </thead>
-            <tbody>
-              {leaves.slice(0, 15).map((l) => (
-                <tr key={l.leave} className="border-t border-gray-800 text-center">
-                  <td className="py-1 text-left">
-                    {leaveName(l.leave)}
-                    {isSplit(l.leave) && <span className="ml-2 text-xs text-red-400">split</span>}
-                  </td>
-                  <td>{l.attempts}</td>
-                  <td>{l.converted}</td>
-                  <td>{fmtPct(pct(l.converted, l.attempts))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
     </div>
   )
 }
