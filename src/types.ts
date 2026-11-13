@@ -106,3 +106,12 @@ export type BowlerProfile = {
 export type Hand = 'left' | 'right'
 // 'one-handed' = thumb in (conventional); 'thumbless' = one-handed, two fingers
 export type BowlingStyle = 'two-handed' | 'one-handed' | 'thumbless'
+
+// Closing a league's season records when it ended. A season is every session of
+// that league after the previous close, up to and including this one. Sessions
+// themselves are never rewritten, so closing (or undoing a close) is safe.
+export type SeasonClose = {
+  id: string
+  leagueKey: string      // leagueKey(eventName), see stats/slices.ts
+  closedAt: string       // ISO timestamp
+}

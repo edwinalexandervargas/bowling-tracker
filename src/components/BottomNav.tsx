@@ -4,7 +4,8 @@ import { SideMenu } from './SideMenu'
 import { menuLinks } from './menuLinks'
 
 const tabs = [
-  { to: '/', label: 'Score' },
+  { to: '/', label: 'Home' },
+  { to: '/score', label: 'Score' },
   { to: '/nights', label: 'Nights' },
   { to: '/stats', label: 'Stats' },
 ]

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { isFrameComplete } from '../scoring/frame'
 import { addShot } from '../game/game'
 import { removeLastShot } from '../game/removeLastShot'
-import type { Ball, BallSpec, Session, Pattern, BowlerProfile, Game } from '../types'
+import type { Ball, BallSpec, Session, Pattern, BowlerProfile, Game, SeasonClose } from '../types'
 
 type GameEntry = {
   sessionId: string
@@ -19,6 +19,7 @@ type AppState = {
   balls: Ball[]
   sessions: Session[]
   patterns: Pattern[]
+  seasonCloses: SeasonClose[]
 
   // Entry state
   activeEntry: GameEntry | null
@@ -34,6 +35,10 @@ type AppState = {
 
   // Patterns
   addPattern: (pattern: Pattern) => void
+
+  // Seasons
+  closeSeason: (leagueKey: string) => void
+  undoCloseSeason: (leagueKey: string) => void
 
   // Session flow
   startSession: (session: Session) => void
@@ -81,6 +86,7 @@ export const useGameStore = create<AppState>()(
       balls: [],
       sessions: [],
       patterns: [],
+      seasonCloses: [],
       activeEntry: null,
 
       // Merge so saving one part (e.g. weight) doesn't wipe another (e.g. PAP)
@@ -107,6 +113,22 @@ export const useGameStore = create<AppState>()(
 
       addPattern: (pattern) =>
         set((state) => ({ patterns: [...state.patterns, pattern] })),
+
+      closeSeason: (leagueKey) =>
+        set((state) => ({
+          seasonCloses: [
+            ...state.seasonCloses,
+            { id: crypto.randomUUID(), leagueKey, closedAt: new Date().toISOString() },
+          ],
+        })),
+
+      // Reopens the most recently closed season of this league
+      undoCloseSeason: (leagueKey) =>
+        set((state) => {
+          const mine = state.seasonCloses.filter((c) => c.leagueKey === leagueKey)
+          const last = mine.sort((a, b) => b.closedAt.localeCompare(a.closedAt))[0]
+          return last ? { seasonCloses: state.seasonCloses.filter((c) => c.id !== last.id) } : {}
+        }),
 
       startSession: (session) =>
         set((state) => ({

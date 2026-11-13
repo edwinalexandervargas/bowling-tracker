@@ -5,6 +5,8 @@ import { ArsenalScreen } from './screens/ArsenalScreen'
 import { AddBallScreen } from './screens/AddBallScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { PatternsScreen } from './screens/PatternsScreen'
+import { HomeScreen } from './screens/HomeScreen'
+import { LeagueScreen } from './screens/LeagueScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { NightsScreen } from './screens/NightsScreen'
 import { NightDetailScreen } from './screens/NightDetailScreen'
@@ -22,9 +24,11 @@ const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <ScoreScreen /> },
+      { path: '/', element: <HomeScreen /> },
+      { path: '/score', element: <ScoreScreen /> },
       { path: '/nights', element: <NightsScreen /> },
       { path: '/nights/:sessionId', element: <NightDetailScreen /> },
+      { path: '/leagues/:leagueKey', element: <LeagueScreen /> },
       { path: '/stats', element: <StatsScreen /> },
       { path: '/arsenal', element: <ArsenalScreen /> },
       { path: '/arsenal/new', element: <AddBallScreen /> },
