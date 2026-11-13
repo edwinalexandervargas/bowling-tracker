@@ -9,6 +9,11 @@ export function pct(made: number, chances: number): number | null {
   return chances === 0 ? null : Math.round((made / chances) * 1000) / 10
 }
 
+// "62.5%", or null when there were no chances
+export function fmtPct(p: number | null): string | null {
+  return p === null ? null : `${p}%`
+}
+
 export type ShotStats = {
   strikes: number
   strikeChances: number      // every fresh rack, incl. 10th-frame fill balls

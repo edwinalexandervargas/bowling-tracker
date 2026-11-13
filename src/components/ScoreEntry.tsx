@@ -22,6 +22,7 @@ export function ScoreEntry() {
   })
   const recordShot = useGameStore((s) => s.recordShot)
   const nextGame = useGameStore((s) => s.nextGame)
+  const endSession = useGameStore((s) => s.endSession)
   const undoShot = useGameStore((s) => s.undoShot)
   const balls = useGameStore((s) => s.balls)
   const ballSpecs = useGameStore((s) => s.ballSpecs)
@@ -49,6 +50,12 @@ export function ScoreEntry() {
           className="py-3 px-6 bg-blue-600 rounded-lg font-bold active:scale-95"
         >
           Next game
+        </button>
+        <button
+          onClick={endSession}
+          className="py-3 px-6 bg-gray-700 rounded-lg font-bold active:scale-95"
+        >
+          End session
         </button>
         <button
           onClick={() => {

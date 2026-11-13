@@ -1,3 +1,4 @@
+import { ballName } from '../arsenal/ballLabel'
 import { Link } from 'react-router'
 import type { Ball, BallSpec } from '../types'
 import { formatLayout } from '../arsenal/formatLayout'
@@ -20,8 +21,7 @@ export function BallPicker({ balls, ballSpecs, currentBallId, onChange }: Props)
   }
 
   const label = (ball: Ball) => {
-    const spec = ballSpecs.find((s) => s.id === ball.specId)
-    return `${ball.nickname ?? spec?.name ?? 'Unknown'} · ${formatLayout(ball.layout)}`
+    return `${ballName(ball, ballSpecs)} · ${formatLayout(ball.layout)}`
   }
 
   return (
