@@ -147,3 +147,8 @@
 - Decision: a game counts toward average/high game once all 10 frames are scorable. High series needs a session with 3+ completed games. Average is floored like league averages.
 - Alternatives: include partial games (drags the average down mid-game); allow any game count for series (a 1-game practice could be "high series").
 - Why: keeps headline numbers comparable to a league sheet. Shot stats (strike/spare %) still count every rack, finished or not.
+
+## Navigation: short bottom bar + side drawer
+- Decision: the bottom bar keeps Score, Nights, Stats, plus a Menu tab. Menu opens a side drawer with Arsenal, Patterns, Profile. The Menu tab shows as active on those routes.
+- Alternatives: 6-tab bottom bar (cramped, ~60px per tab); hamburger drawer with everything (Score becomes two taps, and the top-corner button is hard to reach one-handed); "More" bottom sheet (no side menu).
+- Why: league-night screens stay one thumb-tap away, and setup screens (rarely used at the lane) move out of the way. The Menu button sits in the bar, so it's still thumb-reachable.
