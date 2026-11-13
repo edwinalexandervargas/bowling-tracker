@@ -13,7 +13,7 @@ import { NightDetailScreen } from './screens/NightDetailScreen'
 
 function Layout() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 pb-20">
+    <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)] text-white flex flex-col items-center p-4 pb-24">
       <Outlet />
       <BottomNav />
     </div>
