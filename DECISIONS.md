@@ -131,3 +131,19 @@
 - Decision: a strike chance is any shot thrown at a full rack, including 10th-frame fill balls. Stats start from firstBalls(game): one entry per fresh rack with its leave and whether it was converted.
 - Alternatives: one chance per frame (10 per game; hides 10th-frame fill balls).
 - Why: counts every shot where a strike was possible, which matches league software. Working per rack instead of per frame also makes the 10th frame need no special case.
+
+
+## Split = headpin down + a gap between standing pins
+- Decision: isSplit(leave) builds groups of standing pins that touch (side by side, diagonal, or directly behind like 2-8) and calls it a split when the headpin is down and there is more than one group.
+- Alternatives: a hard-coded list of named splits (misses rare combos, easy to get wrong); "any two non-adjacent pins" (would wrongly count sleepers like 2-8).
+- Why: matches the USBC idea of a split from the bitmask alone, so baby splits (3-10, 2-7) and big splits are all caught, and it's testable leave by leave.
+
+## Per-ball stats are shot stats only
+- Decision: byBall reports strike/spare/leave stats per ball, not average or high game.
+- Alternatives: credit a game's score to the ball used most (misleading when switching mid-game); force one ball per game (doesn't match how I bowl).
+- Why: the ball is recorded per frame, so only rack-level outcomes can be attributed honestly.
+
+## Average and high series use completed games only
+- Decision: a game counts toward average/high game once all 10 frames are scorable. High series needs a session with 3+ completed games. Average is floored like league averages.
+- Alternatives: include partial games (drags the average down mid-game); allow any game count for series (a 1-game practice could be "high series").
+- Why: keeps headline numbers comparable to a league sheet. Shot stats (strike/spare %) still count every rack, finished or not.
