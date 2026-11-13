@@ -1,4 +1,4 @@
-import type { Game } from '../types'
+import type { Frame, Game } from '../types'
 
 const FULL_RACK = 0b1111111111 // 1023: all 10 pins standing
 
@@ -10,20 +10,21 @@ export type FirstBall = {
   converted?: boolean     // leave picked up? undefined for strikes, or if the second ball isn't thrown yet
 }
 
-export function firstBalls(game: Game): FirstBall[] {
+// First balls of a single frame (more than one only in the 10th).
+export function frameFirstBalls(frame: Frame, frameIndex: number): FirstBall[] {
   const result: FirstBall[] = []
+  frame.shots.forEach((shot, i) => {
+    if (shot.pinsBefore !== FULL_RACK) return // not a fresh rack: a spare attempt
 
-  game.frames.forEach((frame, frameIndex) => {
-    frame.shots.forEach((shot, i) => {
-      if (shot.pinsBefore !== FULL_RACK) return // not a fresh rack: a spare attempt
-
-      const entry: FirstBall = { frameIndex, leave: shot.pinsAfter }
-      const next = frame.shots[i + 1]
-      // A spare attempt is the next shot in the same frame at this leave.
-      if (shot.pinsAfter !== 0 && next) entry.converted = next.pinsAfter === 0
-      result.push(entry)
-    })
+    const entry: FirstBall = { frameIndex, leave: shot.pinsAfter }
+    const next = frame.shots[i + 1]
+    // A spare attempt is the next shot in the same frame at this leave.
+    if (shot.pinsAfter !== 0 && next) entry.converted = next.pinsAfter === 0
+    result.push(entry)
   })
-
   return result
+}
+
+export function firstBalls(game: Game): FirstBall[] {
+  return game.frames.flatMap((frame, i) => frameFirstBalls(frame, i))
 }
