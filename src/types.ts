@@ -92,7 +92,17 @@ export type Pattern = {
   | { kind: 'sport'; length: number }    // feet, required
 )
 
+// Every field is optional so each part can be saved on its own.
+// papOver and papUp are always saved together.
 export type BowlerProfile = {
-  papOver: number        // inches, horizontal
-  papUp: number          // inches, vertical: positive = up, negative = down
+  papOver?: number       // inches, horizontal
+  papUp?: number         // inches, vertical: positive = up, negative = down
+  usbcNumber?: string
+  ballWeight?: number    // whole lbs; default for new balls
+  hand?: Hand
+  style?: BowlingStyle
 }
+
+export type Hand = 'left' | 'right'
+// 'one-handed' = thumb in (conventional); 'thumbless' = one-handed, two fingers
+export type BowlingStyle = 'two-handed' | 'one-handed' | 'thumbless'

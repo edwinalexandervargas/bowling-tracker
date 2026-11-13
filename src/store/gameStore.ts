@@ -24,7 +24,7 @@ type AppState = {
   activeEntry: GameEntry | null
 
   // Profile
-  setProfile: (profile: BowlerProfile) => void
+  updateProfile: (patch: Partial<BowlerProfile>) => void
 
   // Arsenal
   addBallSpec: (spec: BallSpec) => void
@@ -83,7 +83,9 @@ export const useGameStore = create<AppState>()(
       patterns: [],
       activeEntry: null,
 
-      setProfile: (profile) => set({ profile }),
+      // Merge so saving one part (e.g. weight) doesn't wipe another (e.g. PAP)
+      updateProfile: (patch) =>
+        set((state) => ({ profile: { ...state.profile, ...patch } })),
 
       addBallSpec: (spec) =>
         set((state) => ({ ballSpecs: [...state.ballSpecs, spec] })),

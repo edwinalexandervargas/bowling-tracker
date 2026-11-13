@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore'
 import { parseInches } from '../measure/inches'
 import { findSpec } from '../arsenal/specs'
 import type { Layout } from '../types'
+import { parseBallWeight } from '../profile/profileFields'
 
 type System = Layout['system']
 
@@ -46,7 +47,8 @@ export function AddBallScreen() {
 
   // Your copy
   const [nickname, setNickname] = useState('')
-  const [weight, setWeight] = useState('15')
+  const defaultWeight = useGameStore((s) => s.profile?.ballWeight ?? 15)
+  const [weight, setWeight] = useState(String(defaultWeight))
   const [surface, setSurface] = useState('')
 
   // Layout: three raw strings, meaning depends on system
@@ -81,8 +83,8 @@ export function AddBallScreen() {
     const layout = buildLayout()
     if (!layout) return setError('Layout: inches in 1/16 steps (4 1/2), angles 0-180.')
 
-    const lbs = Number(weight)
-    if (!Number.isInteger(lbs) || lbs < 6 || lbs > 16) return setError('Weight: whole pounds, 6-16.')
+    const lbs = parseBallWeight(weight)
+    if (lbs === null) return setError('Weight: whole pounds, 6-16.')
 
     let spec = existing
     if (!spec) {
