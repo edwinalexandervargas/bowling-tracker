@@ -177,3 +177,8 @@
 - Decision: the app is fully usable signed out. Sign-in lives at /login, reached from the menu and sidebar, and nothing waits on the auth check at startup.
 - Alternatives: require sign-in before anything else (blocks the app with no signal, and blocks it entirely if auth is misconfigured).
 - Why: offline-first means every tap saves locally first. An account is only needed for backup and sync.
+
+## Side pots screen: a tested "looks" layer between pot logic and UI
+- Decision: bingoLooks and threeSixNineLooks turn pot state into one of seven looks per square (won, lit, dim, miss, closest, target, idle). The screen only maps a look to classes. A line counts as "closest" once it has a hit; nothing glows after a pot is secured or lost; a finished night that never completed a line reads "Not won".
+- Alternatives: decide the look inside the component (untested branching in JSX); add "live" and "decided" handling to bingoBoard itself (mixes display concerns into the rules).
+- Why: what happened and what to show are different questions. The second depends on whether the night is live, which the rules shouldn't know about. As a pure function it is unit tested.
