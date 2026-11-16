@@ -6,8 +6,8 @@ import { gameScore, pct, fmtPct } from '../stats/stats'
 import { sessionsInPeriod, type Period } from '../stats/period'
 import { count } from '../format'
 import { TrendChart } from '../components/TrendChart'
+import { LeagueCard } from '../components/LeagueCard'
 import { Card, Chips, Metric, PinRack, SectionTitle, Segmented } from '../components/ui'
-import { Icon } from '../components/Icon'
 import { textButton } from '../components/styles'
 
 const PERIODS: { key: Period; label: string }[] = [
@@ -26,6 +26,8 @@ export function HomeScreen() {
   const leagues = useMemo(() => byLeague(inPeriod), [inPeriod])
   // null = house shot overview; otherwise a leagueKey
   const [league, setLeague] = useState<string | null>(null)
+  // Which league card is dropped open in the Leagues list (none to start)
+  const [openLeague, setOpenLeague] = useState<string | null>(null)
   const selected = useMemo(
     () =>
       league === null
@@ -123,36 +125,14 @@ export function HomeScreen() {
           <SectionTitle>Leagues</SectionTitle>
           <div className="space-y-2">
             {leagues.map((l) => (
-              <Card key={l.key} className="overflow-hidden">
-                <Link to={`/leagues/${encodeURIComponent(l.key)}`} className="flex items-center gap-3 p-4 transition active:bg-raised">
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-raised text-sm font-semibold text-accent ring-1 ring-line">
-                    {l.label.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{l.label}</p>
-                    <p className="text-xs text-muted">
-                      {count(l.score.games, 'game')} · {fmtPct(pct(l.shots.strikes, l.shots.strikeChances)) ?? '—'} strikes
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="num text-3xl font-semibold">{l.score.average ?? '—'}</p>
-                    <p className="text-xs text-muted">average</p>
-                  </div>
-                  <Icon name="back" className="h-4 w-4 rotate-180 text-muted" />
-                </Link>
-                {patternsByLeague.get(l.key) && (
-                  <div className="flex gap-2 overflow-x-auto border-t border-line px-4 py-3 [scrollbar-width:none]">
-                    {patternsByLeague.get(l.key)!.map((p) => (
-                      <div key={p.key} className="shrink-0 rounded-xl bg-raised px-3 py-2">
-                        <p className="text-[11px] text-muted">{p.label}</p>
-                        <p className="num text-lg font-semibold">
-                          {p.score.average ?? '—'} <span className="text-xs font-normal text-muted">· {p.score.games}g</span>
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card>
+              <LeagueCard
+                key={l.key}
+                league={l}
+                patternRows={patternsByLeague.get(l.key)}
+                open={openLeague === l.key}
+                // Opening one closes the other; tapping the open one closes it
+                onToggle={() => setOpenLeague((current) => (current === l.key ? null : l.key))}
+              />
             ))}
           </div>
         </section>
