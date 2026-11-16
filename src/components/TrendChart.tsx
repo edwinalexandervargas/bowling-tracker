@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react'
+import { count } from '../format'
 
 const W = 320
 const H = 120
@@ -41,35 +42,35 @@ export function TrendChart({ values, average }: { values: number[]; average: num
 
   return (
     <div className="relative">
-      <div className="mb-2 flex items-baseline justify-between text-xs text-white/60">
+      <div className="mb-2 flex items-baseline justify-between text-xs text-muted">
         <span>{active === null ? 'Latest game' : `Game ${active + 1} of ${values.length}`}</span>
-        <span className="text-base font-semibold tabular-nums text-white">{shown.v}</span>
+        <span className="num text-xl font-semibold text-ink">{shown.v}</span>
       </div>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="h-32 w-full touch-none overflow-visible"
         role="img"
-        aria-label={`Trend of ${values.length} games`}
+        aria-label={`Trend of ${count(values.length, 'game')}`}
         onPointerDown={(e) => scrub(e.clientX, e.currentTarget)}
         onPointerMove={(e) => (e.buttons || e.pointerType === 'mouse') && scrub(e.clientX, e.currentTarget)}
         onPointerLeave={() => setActive(null)}
       >
         <defs>
           <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path d={area} fill={`url(#${id}-fill)`} />
         {avgY !== null && (
-          <line x1="0" x2={W} y1={avgY} y2={avgY} stroke="white" strokeOpacity="0.35" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
+          <line x1="0" x2={W} y1={avgY} y2={avgY} stroke="var(--color-ink)" strokeOpacity="0.45" strokeDasharray="4 4" vectorEffect="non-scaling-stroke" />
         )}
-        <path d={line} fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <line x1={shown.x} x2={shown.x} y1="0" y2={H} stroke="white" strokeOpacity="0.2" vectorEffect="non-scaling-stroke" />
-        <circle cx={shown.x} cy={shown.y} r="7" fill="white" fillOpacity="0.25" />
-        <circle cx={shown.x} cy={shown.y} r="4" fill="white" />
+        <path d={line} fill="none" stroke="var(--color-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <line x1={shown.x} x2={shown.x} y1="0" y2={H} stroke="var(--color-ink)" strokeOpacity="0.25" vectorEffect="non-scaling-stroke" />
+        <circle cx={shown.x} cy={shown.y} r="7" fill="var(--color-ink)" fillOpacity="0.25" />
+        <circle cx={shown.x} cy={shown.y} r="4" fill="var(--color-ink)" />
       </svg>
-      {average !== null && <p className="mt-1 text-right text-[11px] text-white/50">- - average {average}</p>}
+      {average !== null && <p className="mt-1 text-right text-xs text-muted">Dashed line: average {average}</p>}
     </div>
   )
 }

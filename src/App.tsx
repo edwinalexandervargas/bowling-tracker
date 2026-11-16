@@ -1,5 +1,10 @@
+import { useEffect } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router'
+import { useAuthStore } from './auth/authStore'
+import { LoginScreen } from './screens/LoginScreen'
 import { BottomNav } from './components/BottomNav'
+import { Sidebar } from './components/Sidebar'
+import { SidePotsScreen } from './screens/SidePotsScreen'
 import { ScoreScreen } from './screens/ScoreScreen'
 import { ArsenalScreen } from './screens/ArsenalScreen'
 import { AddBallScreen } from './screens/AddBallScreen'
@@ -12,9 +17,18 @@ import { NightsScreen } from './screens/NightsScreen'
 import { NightDetailScreen } from './screens/NightDetailScreen'
 
 function Layout() {
+  // Restores a saved sign-in in the background. Nothing waits on it:
+  // the app is fully usable signed out and offline.
+  const init = useAuthStore((s) => s.init)
+  useEffect(() => init(), [init])
+
   return (
-    <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.15),transparent_60%)] text-white flex flex-col items-center p-4 pb-24">
-      <Outlet />
+    <div className="flex min-h-dvh">
+      <Sidebar />
+      {/* Bottom padding clears the phone's bottom bar; the side padding keeps content out of notches. */}
+      <main className="min-w-0 flex-1 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(5rem+env(safe-area-inset-bottom))] pl-4 md:pt-8 md:pr-[max(2rem,env(safe-area-inset-right))] md:pb-8 md:pl-8 short:pt-3! short:pb-3! short:pl-4!">
+        <Outlet />
+      </main>
       <BottomNav />
     </div>
   )
@@ -26,6 +40,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomeScreen /> },
       { path: '/score', element: <ScoreScreen /> },
+      { path: '/side-pots', element: <SidePotsScreen /> },
       { path: '/nights', element: <NightsScreen /> },
       { path: '/nights/:sessionId', element: <NightDetailScreen /> },
       { path: '/leagues/:leagueKey', element: <LeagueScreen /> },
@@ -34,6 +49,7 @@ const router = createBrowserRouter([
       { path: '/arsenal/new', element: <AddBallScreen /> },
       { path: '/patterns', element: <PatternsScreen /> },
       { path: '/profile', element: <ProfileScreen /> },
+      { path: '/login', element: <LoginScreen /> },
     ],
   },
 ])

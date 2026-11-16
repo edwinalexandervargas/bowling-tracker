@@ -6,6 +6,8 @@ import {
   type PatternDraft,
   type PatternErrors,
 } from '../patterns/validatePattern'
+import { Page, Card } from '../components/ui'
+import { inputClass, inputErrorClass, primaryButton, toggleClass } from '../components/styles'
 
 const EMPTY: PatternDraft = { kind: 'sport', name: '', length: '', ratio: '', volume: '', notes: '' }
 
@@ -40,22 +42,21 @@ export function PatternsScreen() {
   }
 
   return (
-    <div className="w-full max-w-sm space-y-6">
-      <h1 className="text-2xl font-bold">Patterns</h1>
-
+    <Page title="Patterns" wide>
+      {/* Form and list sit side by side from 1024px; stacked below that. */}
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="flex gap-2">
           {(['house', 'sport'] as const).map((k) => (
             <button
               key={k}
               type="button"
+              aria-pressed={draft.kind === k}
               onClick={() => {
                 setDraft((d) => ({ ...d, kind: k }))
                 setErrors((e) => ({ ...e, length: undefined }))
               }}
-              className={`flex-1 rounded py-1 text-sm ${
-                draft.kind === k ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-              }`}
+              className={toggleClass(draft.kind === k)}
             >
               {k === 'house' ? 'House shot' : 'Sport / named'}
             </button>
@@ -63,7 +64,7 @@ export function PatternsScreen() {
         </div>
         {FIELDS.map((f) => (
           <label key={f.key} className="block">
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-muted">
               {f.label}
               {draft.kind === 'house' && f.key !== 'name' && ' (optional)'}
             </span>
@@ -72,29 +73,27 @@ export function PatternsScreen() {
               onChange={(e) => setField(f.key, e.target.value)}
               placeholder={f.placeholder}
               inputMode={f.inputMode}
-              className={`mt-1 w-full rounded bg-gray-800 px-3 py-2 text-white ${
-                errors[f.key] ? 'ring-1 ring-red-400' : ''
-              }`}
+              className={`${inputClass} ${errors[f.key] ? inputErrorClass : ''}`}
             />
-            {errors[f.key] && <span className="text-xs text-red-400">{errors[f.key]}</span>}
+            {errors[f.key] && <span className="text-xs text-danger">{errors[f.key]}</span>}
           </label>
         ))}
-        <button type="submit" className="w-full rounded bg-blue-600 py-2 font-medium hover:bg-blue-500">
+        <button type="submit" className={`${primaryButton} w-full`}>
           Add pattern
         </button>
       </form>
 
       {patterns.length === 0 ? (
-        <p className="text-gray-400">No patterns yet.</p>
+        <Card className="p-6 text-muted">No patterns yet. House shot is always available without adding one.</Card>
       ) : (
         <ul className="space-y-2">
           {patterns.map((p) => (
-            <li key={p.id} className="rounded bg-gray-800 p-3">
+            <li key={p.id} className="rounded-xl bg-surface p-4 ring-1 ring-line">
               <p className="font-medium">
                 {p.name}
-                {p.kind === 'house' && <span className="ml-2 text-xs text-gray-400">House</span>}
+                {p.kind === 'house' && <span className="ml-2 text-xs text-muted">House</span>}
               </p>
-              <p className="text-sm text-gray-300">
+              <p className="num text-lg">
                 {[
                   p.length !== undefined && `${p.length} ft`,
                   p.ratio !== undefined && formatRatio(p.ratio),
@@ -103,11 +102,12 @@ export function PatternsScreen() {
                   .filter(Boolean)
                   .join(' · ')}
               </p>
-              {p.notes && <p className="text-sm text-gray-400">{p.notes}</p>}
+              {p.notes && <p className="text-sm text-muted">{p.notes}</p>}
             </li>
           ))}
         </ul>
       )}
-    </div>
+      </div>
+    </Page>
   )
 }

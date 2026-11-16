@@ -1,1 +1,71 @@
 @import "tailwindcss";
+@import "@fontsource-variable/archivo/wdth.css";
+
+/* Lane at night: one dark theme.
+   Tokens are named by role, not by colour, so components never mention a hue
+   and the whole palette can change here without touching a screen. */
+@theme {
+  /* Tailwind's default palette is switched off: only these tokens exist. */
+  --color-*: initial;
+  --color-black: #000;
+  --color-page: #0e1a2b;          /* the lane under low light */
+  --color-surface: #172840;       /* cards, bars, the scoresheet */
+  --color-raised: #213654;        /* inputs, pressed and selected states */
+  --color-line: #2a3e5c;          /* hairlines and outlines */
+  --color-ink: #f3efe6;           /* primary text: pin white */
+  --color-muted: #93a4ba;         /* secondary text */
+  --color-accent: #e8b04b;        /* maple: the one accent */
+  --color-accent-strong: #f2c56b; /* maple, hovered */
+  --color-on-accent: #1b1406;     /* text on maple */
+  --color-danger: #f0787c;        /* misses, errors, splits */
+
+  /* One variable font, bundled with the app so it works with no signal. */
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --spacing-tap: 2.75rem;         /* 44px: the smallest touch target */
+}
+
+/* A phone held sideways: lots of width, almost no height. */
+@custom-variant short (@media (orientation: landscape) and (max-height: 520px));
+
+/* Scores and stats: narrow, fixed-width digits so columns line up and don't jiggle. */
+@utility num {
+  font-stretch: 75%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Screen titles: the same font, set wide. */
+@utility display {
+  font-stretch: 112%;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@layer base {
+  html {
+    color-scheme: dark; /* native selects, scrollbars and autofill follow the theme */
+    background-color: var(--color-page);
+  }
+
+  body {
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useGameStore } from '../store/gameStore'
 import type { SessionType } from '../types'
 import { validateSessionDraft, type SessionDraft, type SessionErrors } from '../sessions/validateSession'
+import { inputClass, inputErrorClass, primaryButton, toggleClass } from './styles'
 
 const TYPES: { value: SessionType; label: string }[] = [
   { value: 'league', label: 'League' },
@@ -45,8 +46,8 @@ export function SessionSetup() {
   const nameOptional = draft.type === 'practice'
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-      <h1 className="text-2xl font-bold">New session</h1>
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-md space-y-4">
+      <h2 className="text-lg font-semibold">New session</h2>
 
       <div className="flex gap-2">
         {TYPES.map((t) => (
@@ -58,9 +59,7 @@ export function SessionSetup() {
               setDraft((d) => ({ ...d, type: t.value }))
               setErrors((e) => ({ ...e, eventName: undefined }))
             }}
-            className={`flex-1 rounded py-2 text-sm ${
-              draft.type === t.value ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-            }`}
+            className={toggleClass(draft.type === t.value)}
           >
             {t.label}
           </button>
@@ -68,28 +67,24 @@ export function SessionSetup() {
       </div>
 
       <label className="block">
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-muted">
           Event name{nameOptional && ' (optional)'}
         </span>
         <input
           value={draft.eventName}
           onChange={(e) => setField('eventName', e.target.value)}
-          placeholder={nameOptional ? 'e.g. Spare drills' : 'e.g. Thursday Night Mixed'}
-          className={`mt-1 w-full rounded bg-gray-800 px-3 py-2 text-white ${
-            errors.eventName ? 'ring-1 ring-red-500' : ''
-          }`}
+          placeholder={nameOptional ? 'Spare drills' : 'Thursday Night Mixed'}
+          className={`${inputClass} ${errors.eventName ? inputErrorClass : ''}`}
         />
-        {errors.eventName && <span className="text-xs text-red-400">{errors.eventName}</span>}
+        {errors.eventName && <span className="text-xs text-danger">{errors.eventName}</span>}
       </label>
 
       <label className="block">
-        <span className="text-sm text-gray-400">Pattern</span>
+        <span className="text-sm text-muted">Pattern</span>
         <select
           value={draft.patternId}
           onChange={(e) => setField('patternId', e.target.value)}
-          className={`mt-1 w-full rounded bg-gray-800 px-3 py-2 text-white ${
-            errors.patternId ? 'ring-1 ring-red-500' : ''
-          }`}
+          className={`${inputClass} ${errors.patternId ? inputErrorClass : ''}`}
         >
           <option value="">House shot</option>
           {patterns.map((p) => (
@@ -99,10 +94,10 @@ export function SessionSetup() {
             </option>
           ))}
         </select>
-        {errors.patternId && <span className="text-xs text-red-400">{errors.patternId}</span>}
+        {errors.patternId && <span className="text-xs text-danger">{errors.patternId}</span>}
       </label>
 
-      <button type="submit" className="w-full rounded bg-blue-600 py-3 font-bold hover:bg-blue-500">
+      <button type="submit" className={`${primaryButton} w-full`}>
         Start session
       </button>
     </form>

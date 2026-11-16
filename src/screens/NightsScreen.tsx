@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { useGameStore } from '../store/gameStore'
 import { nights } from '../stats/slices'
 import { pct, fmtPct } from '../stats/stats'
+import { Page, Card } from '../components/ui'
 
 const TYPE_LABEL = { league: 'League', tournament: 'Tournament', practice: 'Practice' } as const
 
@@ -13,45 +14,49 @@ export function NightsScreen() {
   const rows = useMemo(() => nights(sessions), [sessions])
 
   return (
-    <div className="w-full max-w-sm space-y-4">
-      <h1 className="text-2xl font-bold">Nights</h1>
-      {rows.length === 0 && <p className="text-gray-400">No sessions yet. Start one on the Score tab.</p>}
-      <ul className="space-y-3">
+    <Page title="Nights" wide>
+      {rows.length === 0 && <Card className="p-6 text-muted">No sessions yet. Start one on the Score tab.</Card>}
+      <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {rows.map(({ session, scores, series, shots }) => {
           const pattern = patterns.find((p) => p.id === session.patternId)
           return (
             <li key={session.id}>
-              <Link to={`/nights/${session.id}`} className="block rounded bg-gray-800 p-3 space-y-2 active:bg-gray-700">
-              <div className="flex items-baseline justify-between">
-                <p className="font-medium">{session.eventName ?? TYPE_LABEL[session.type]}</p>
-                <p className="text-xs text-gray-400">
-                  {new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-              </div>
-              <p className="text-xs text-gray-400">
-                {TYPE_LABEL[session.type]} · {pattern?.name ?? 'House shot'}
-              </p>
-              <div className="flex items-end gap-3">
-                {scores.map((sc, i) => (
-                  <div key={i} className="text-center">
-                    <p className="text-xs text-gray-500">G{i + 1}</p>
-                    <p className="text-lg font-bold">{sc ?? '…'}</p>
+              <Link
+                to={`/nights/${session.id}`}
+                className="block h-full space-y-3 rounded-xl bg-surface p-4 ring-1 ring-line transition active:bg-raised"
+              >
+                <div>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="truncate font-semibold">{session.eventName ?? TYPE_LABEL[session.type]}</p>
+                    <p className="shrink-0 text-xs text-muted">
+                      {new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
                   </div>
-                ))}
-                <div className="ml-auto text-right">
-                  <p className="text-xs text-gray-500">Series</p>
-                  <p className="text-lg font-bold">{series ?? '—'}</p>
+                  <p className="text-xs text-muted">
+                    {TYPE_LABEL[session.type]} · {pattern?.name ?? 'House shot'}
+                  </p>
                 </div>
-              </div>
-              <p className="text-xs text-gray-300">
-                Strike {fmtPct(pct(shots.strikes, shots.strikeChances)) ?? '—'} · Spare{' '}
-                {fmtPct(pct(shots.spares, shots.spareChances)) ?? '—'} · Opens {shots.openFrames}
-              </p>
+                <div className="flex items-end gap-4">
+                  {scores.map((sc, i) => (
+                    <div key={i}>
+                      <p className="text-xs text-muted">Game {i + 1}</p>
+                      <p className="num text-2xl font-semibold">{sc ?? '…'}</p>
+                    </div>
+                  ))}
+                  <div className="ml-auto text-right">
+                    <p className="text-xs text-muted">Series</p>
+                    <p className="num text-2xl font-semibold text-accent">{series ?? '—'}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted">
+                  Strike {fmtPct(pct(shots.strikes, shots.strikeChances)) ?? '—'} · Spare{' '}
+                  {fmtPct(pct(shots.spares, shots.spareChances)) ?? '—'} · Opens {shots.openFrames}
+                </p>
               </Link>
             </li>
           )
         })}
       </ul>
-    </div>
+    </Page>
   )
 }

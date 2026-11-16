@@ -5,7 +5,10 @@ import { leagueSeasons, leagueKey, summarize, byPattern, houseShotSessions, nigh
 import { pct, fmtPct } from '../stats/stats'
 import { TrendChart } from '../components/TrendChart'
 import { Card, Chips, Metric, SectionTitle } from '../components/ui'
+import { Icon } from '../components/Icon'
+import { primaryButton, secondaryButton, quietTextButton } from '../components/styles'
 import { gameScore } from '../stats/stats'
+import { count } from '../format'
 
 // One league: pick a season, see its stats, per-pattern averages and every night's scores.
 export function LeagueScreen() {
@@ -33,12 +36,15 @@ export function LeagueScreen() {
   const hasClosed = seasons.length > 1
 
   return (
-    <div className="w-full max-w-sm space-y-5">
-      <div>
-        <Link to="/" className="text-sm text-indigo-300">‹ Overview</Link>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">{name}</h1>
-        <p className="text-sm text-gray-400">{season.label}</p>
-      </div>
+    <div className="mx-auto w-full max-w-5xl space-y-5">
+      <header>
+        <Link to="/" className="-ml-2 inline-flex min-h-tap items-center gap-1 px-2 text-sm font-medium text-accent">
+          <Icon name="back" className="h-4 w-4" />
+          Overview
+        </Link>
+        <h1 className="display text-2xl">{name}</h1>
+        <p className="text-sm text-muted">{season.label}</p>
+      </header>
 
       {hasClosed && (
         <Chips label="Season" value={season.id} options={seasons.map((x) => ({ key: x.id, label: x.label }))}
@@ -46,14 +52,16 @@ export function LeagueScreen() {
       )}
 
       {season.sessions.length === 0 ? (
-        <Card className="p-8 text-center text-gray-400">No nights bowled this season yet.</Card>
+        <Card className="p-8 text-center text-muted">No nights bowled this season yet.</Card>
       ) : (
-        <>
-          <section className="rounded-3xl bg-gradient-to-br from-indigo-500 via-violet-600 to-fuchsia-600 p-5 shadow-2xl shadow-violet-900/40">
-            <p className="text-sm font-medium text-white/70">Season average</p>
+        // One column up to 1024px, then numbers on the left and the weekly list on the right.
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-8">
+          <div className="space-y-5">
+          <section className="rounded-2xl bg-surface p-5 ring-1 ring-line">
+            <p className="text-sm font-medium text-muted">Season average</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-bold tracking-tight tabular-nums">{score.average ?? '—'}</span>
-              <span className="text-sm text-white/60">{score.games} games · {summary.sessions} weeks</span>
+              <span className="num text-7xl font-semibold text-accent">{score.average ?? '—'}</span>
+              <span className="text-sm text-muted">{count(score.games, 'game')} · {count(summary.sessions, 'week')}</span>
             </div>
             <div className="mt-4"><TrendChart values={trend} average={score.average} /></div>
           </section>
@@ -72,9 +80,9 @@ export function LeagueScreen() {
                 {patternRows.map((p) => (
                   <li key={p.key}>
                     <Card className="p-3">
-                      <p className="truncate text-xs text-gray-400">{p.label}</p>
-                      <p className="text-xl font-semibold tabular-nums">{p.score.average ?? '—'}</p>
-                      <p className="text-xs text-gray-500">{p.score.games} games</p>
+                      <p className="truncate text-xs text-muted">{p.label}</p>
+                      <p className="num text-2xl font-semibold">{p.score.average ?? '—'}</p>
+                      <p className="text-xs text-muted">{count(p.score.games, 'game')}</p>
                     </Card>
                   </li>
                 ))}
@@ -82,46 +90,48 @@ export function LeagueScreen() {
             </section>
           )}
 
+          </div>
+
           <section>
             <SectionTitle>Weekly scores</SectionTitle>
-            <ul className="divide-y divide-white/5 overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/10">
+            <ul className="divide-y divide-line overflow-hidden rounded-2xl bg-surface ring-1 ring-line">
               {rows.map(({ session, scores, series }, i) => (
                 <li key={session.id}>
-                  <Link to={`/nights/${session.id}`} className="flex items-center justify-between p-4 transition active:bg-white/5">
+                  <Link to={`/nights/${session.id}`} className="flex items-center justify-between p-4 transition active:bg-raised">
                     <div>
                       <p className="font-medium">
                         Wk {rows.length - i} · {new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted">
                         {patterns.find((p) => p.id === session.patternId)?.name ?? 'House shot'}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold tabular-nums">{series ?? '—'}</p>
-                      <p className="text-xs tabular-nums text-gray-400">{scores.map((s) => s ?? '…').join(' · ')}</p>
+                      <p className="num text-2xl font-semibold">{series ?? '—'}</p>
+                      <p className="num text-sm text-muted">{scores.map((s) => s ?? '…').join(' · ')}</p>
                     </div>
                   </Link>
                 </li>
               ))}
             </ul>
           </section>
-        </>
+        </div>
       )}
 
       {isCurrent && season.sessions.length > 0 && (
         confirming ? (
-          <div className="space-y-3 rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+          <div className="max-w-md space-y-3 rounded-xl bg-surface p-4 ring-1 ring-line">
             <p className="text-sm">Close this season? Nights after today start a new season. You can undo this.</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => { closeSeason(key); setConfirming(false) }}
-                className="flex-1 rounded-xl bg-indigo-500 py-2.5 text-sm font-medium">Close season</button>
+                className={`${primaryButton} flex-1`}>Close season</button>
               <button type="button" onClick={() => setConfirming(false)}
-                className="flex-1 rounded-xl bg-white/10 py-2.5 text-sm">Cancel</button>
+                className={`${secondaryButton} flex-1`}>Cancel</button>
             </div>
           </div>
         ) : (
           <button type="button" onClick={() => setConfirming(true)}
-            className="w-full rounded-2xl py-3 text-sm font-medium text-gray-300 ring-1 ring-white/10 transition active:bg-white/5">
+            className={`${secondaryButton} w-full max-w-md`}>
             Close out season
           </button>
         )
@@ -129,7 +139,7 @@ export function LeagueScreen() {
 
       {season.id === seasons[1]?.id && (
         <button type="button" onClick={() => { undoCloseSeason(key); setSeasonId('current') }}
-          className="w-full text-center text-xs text-gray-500 underline">
+          className={quietTextButton}>
           Reopen this season
         </button>
       )}

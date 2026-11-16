@@ -5,6 +5,8 @@ import { parseInches } from '../measure/inches'
 import { findSpec } from '../arsenal/specs'
 import type { Layout } from '../types'
 import { parseBallWeight } from '../profile/profileFields'
+import { Page } from '../components/ui'
+import { inputClass, primaryButton, toggleClass } from '../components/styles'
 
 type System = Layout['system']
 
@@ -28,8 +30,6 @@ function parseAngle(s: string): number | null {
 }
 
 const optionalNumber = (s: string) => (s.trim() === '' ? undefined : Number(s))
-
-const inputClass = 'mt-1 w-full rounded bg-gray-800 px-3 py-2 text-white'
 
 export function AddBallScreen() {
   const ballSpecs = useGameStore((s) => s.ballSpecs)
@@ -112,38 +112,38 @@ export function AddBallScreen() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
-      <h1 className="text-2xl font-bold">Add ball</h1>
+    <Page title="Add ball" back={{ to: '/arsenal', label: 'Arsenal' }}>
+    <form onSubmit={handleSubmit} className="space-y-6">
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Ball</h2>
         <label className="block">
-          <span className="text-sm text-gray-400">Brand</span>
+          <span className="text-sm text-muted">Brand</span>
           <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Storm" className={inputClass} />
         </label>
         <label className="block">
-          <span className="text-sm text-gray-400">Name</span>
+          <span className="text-sm text-muted">Name</span>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Phase II" className={inputClass} />
         </label>
 
         {existing ? (
-          <p className="text-sm text-gray-400">Already in your specs — this adds another copy.</p>
+          <p className="text-sm text-muted">Already in your specs. This adds another copy.</p>
         ) : (
           <div className="grid grid-cols-3 gap-2">
             <label className="block">
-              <span className="text-sm text-gray-400">RG</span>
+              <span className="text-sm text-muted">RG</span>
               <input value={rg} onChange={(e) => setRg(e.target.value)} placeholder="2.48" inputMode="decimal" className={inputClass} />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-400">Diff</span>
+              <span className="text-sm text-muted">Diff</span>
               <input value={differential} onChange={(e) => setDifferential(e.target.value)} placeholder="0.051" inputMode="decimal" className={inputClass} />
             </label>
             <label className="block">
-              <span className="text-sm text-gray-400">MB diff</span>
+              <span className="text-sm text-muted">MB diff</span>
               <input value={massBiasDiff} onChange={(e) => setMassBiasDiff(e.target.value)} placeholder="—" inputMode="decimal" className={inputClass} />
             </label>
             <label className="col-span-3 block">
-              <span className="text-sm text-gray-400">Coverstock (optional)</span>
+              <span className="text-sm text-muted">Coverstock (optional)</span>
               <input value={coverstock} onChange={(e) => setCoverstock(e.target.value)} className={inputClass} />
             </label>
           </div>
@@ -154,16 +154,16 @@ export function AddBallScreen() {
         <h2 className="text-lg font-semibold">Your copy</h2>
         <div className="grid grid-cols-3 gap-2">
           <label className="col-span-2 block">
-            <span className="text-sm text-gray-400">Nickname (optional)</span>
+            <span className="text-sm text-muted">Nickname (optional)</span>
             <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Phase II #2" className={inputClass} />
           </label>
           <label className="block">
-            <span className="text-sm text-gray-400">Weight (lbs)</span>
+            <span className="text-sm text-muted">Weight (lbs)</span>
             <input value={weight} onChange={(e) => setWeight(e.target.value)} inputMode="numeric" className={inputClass} />
           </label>
         </div>
         <label className="block">
-          <span className="text-sm text-gray-400">Surface</span>
+          <span className="text-sm text-muted">Surface</span>
           <input value={surface} onChange={(e) => setSurface(e.target.value)} placeholder="2000 Abralon" className={inputClass} />
         </label>
       </section>
@@ -175,10 +175,9 @@ export function AddBallScreen() {
             <button
               key={s}
               type="button"
+              aria-pressed={system === s}
               onClick={() => { setSystem(s); setLayoutValues(['', '', '']) }}
-              className={`flex-1 rounded py-1 text-sm ${
-                system === s ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-              }`}
+              className={toggleClass(system === s)}
             >
               {s === '2ls' ? '2LS' : 'Dual angle'}
             </button>
@@ -187,7 +186,7 @@ export function AddBallScreen() {
         <div className="grid grid-cols-3 gap-2">
           {FIELDS[system].map((f, i) => (
             <label key={f.label} className="block">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted">
                 {f.label} {f.unit === 'deg' ? '(°)' : '(in)'}
               </span>
               <input
@@ -201,11 +200,12 @@ export function AddBallScreen() {
         </div>
       </section>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
-      <button type="submit" className="w-full rounded bg-blue-600 py-2 font-medium hover:bg-blue-500">
+      <button type="submit" className={`${primaryButton} w-full`}>
         Save ball
       </button>
     </form>
+    </Page>
   )
 }

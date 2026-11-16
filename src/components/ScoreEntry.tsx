@@ -8,6 +8,7 @@ import { score } from '../scoring/scorer'
 import { PinDeck } from './PinDeck'
 import { Scoresheet } from './Scoresheet'
 import { SessionSetup } from './SessionSetup'
+import { primaryButton, secondaryButton, quietTextButton } from './styles'
 
 // Layer 3, step 1: connect the EXISTING PinDeck to the store.
 // PinDeck itself is unchanged; this component is the only thing that knows about Zustand.
@@ -37,28 +38,24 @@ export function ScoreEntry() {
 
   if (isGameOver) {
     return (
-      <div className="flex flex-col items-center gap-4 w-full">
+      <div className="flex w-full flex-col items-center gap-4">
         <Scoresheet game={game} currentFrame={-1} />
-        <p className="text-gray-400">Game {gameIndex + 1} complete</p>
-        <p className="text-5xl font-bold">{score(gameToRolls(game))}</p>
-        <button
-          onClick={nextGame}
-          className="py-3 px-6 bg-blue-600 rounded-lg font-bold active:scale-95"
-        >
-          Next game
-        </button>
-        <button
-          onClick={endSession}
-          className="py-3 px-6 bg-gray-700 rounded-lg font-bold active:scale-95"
-        >
-          End session
-        </button>
+        <p className="text-muted">Game {gameIndex + 1} complete</p>
+        <p className="num text-7xl font-semibold text-accent">{score(gameToRolls(game))}</p>
+        <div className="flex w-full max-w-xs flex-col gap-2">
+          <button onClick={nextGame} className={primaryButton}>
+            Next game
+          </button>
+          <button onClick={endSession} className={secondaryButton}>
+            End session
+          </button>
+        </div>
         <button
           onClick={() => {
             undoShot()
             setError(null)
           }}
-          className="text-sm text-gray-400 underline"
+          className={quietTextButton}
         >
           Undo last shot
         </button>
@@ -80,38 +77,46 @@ export function ScoreEntry() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
-      <Scoresheet game={game} currentFrame={frameIndex} />
+    // Phone held upright: the column fills the screen and the pins sit at the bottom,
+    // inside thumb reach (9rem = the padding, title and bottom bar around this block).
+    // Sideways there is no height to spare, so the sheet goes left and the pins right.
+    <div className="flex min-h-[calc(100dvh-9rem-env(safe-area-inset-bottom))] w-full flex-col gap-4 md:min-h-0 short:grid short:min-h-0 short:grid-cols-2 short:items-center short:gap-6">
+      <div className="space-y-3 short:space-y-2">
+        <Scoresheet game={game} currentFrame={frameIndex} />
 
-      <p className="text-lg">
-        Game {gameIndex + 1} · Frame {frameIndex + 1} · Ball {shotNumber}
-      </p>
+        <div className="text-center">
+          <p className="text-lg font-medium short:text-base">
+            Game {gameIndex + 1} · Frame {frameIndex + 1} · Ball {shotNumber}
+          </p>
+          <p className="text-sm text-muted">
+            {isFreshRack ? 'Fresh rack' : `Pins up: ${pinsStanding(pinsBefore).join(', ')}`}
+          </p>
+        </div>
 
-      <p className="text-xs text-gray-400">
-        {isFreshRack ? 'Fresh rack' : `Pins up: ${pinsStanding(pinsBefore).join(', ')}`}
-      </p>
+        {error && <p role="alert" className="text-center text-sm text-danger">{error}</p>}
+      </div>
 
-      {/* key forces a fresh PinDeck (cleared taps) for every new ball */}
-      <PinDeck
-        key={`${game.id}-${frameIndex}-${shotNumber}`}
-        onConfirm={handleConfirm}
-        pinsBefore={pinsBefore}
-        isFreshRack={isFreshRack}
-      />
+      <div className="mt-auto flex flex-col items-center md:mt-0 short:mt-0">
+        {/* key forces a fresh PinDeck (cleared taps) for every new ball */}
+        <PinDeck
+          key={`${game.id}-${frameIndex}-${shotNumber}`}
+          onConfirm={handleConfirm}
+          pinsBefore={pinsBefore}
+          isFreshRack={isFreshRack}
+        />
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
-
-      {game.frames.length > 0 && (
+        {game.frames.length > 0 && (
           <button
             onClick={() => {
               undoShot()
               setError(null)
             }}
-            className="text-sm text-gray-400 underline"
+            className={quietTextButton}
           >
             Undo last shot
           </button>
-      )}
+        )}
+      </div>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { isPinStanding } from '../pins/pins'
+import { primaryButton, secondaryButton, dangerButton, quietTextButton } from './styles'
 
 type PinDeckProps = {
   onConfirm: (pinsStanding: number) => void
@@ -54,35 +55,38 @@ export function PinDeck({
     setStanding(0)
   }
 
+  // One main action at a time: Strike/Spare until a pin is tapped, then Confirm.
+  const allDownClass = hasTaps ? secondaryButton : primaryButton
+  const confirmClass = hasTaps ? primaryButton : secondaryButton
+
   return (
-    <div className="flex flex-col items-center gap-4">
-      {/* Pin triangle */}
-      <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-4 short:gap-3">
+      {/* Pin triangle. Pins are 52px (44px sideways), big enough for a thumb. */}
+      <div className="flex flex-col items-center gap-2 short:gap-1.5">
         {PIN_ROWS.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex gap-2 justify-center">
+          <div key={rowIndex} className="flex justify-center gap-2 short:gap-1.5">
             {row.map((pin) => {
               const inPlay = isPinStanding(pinsBefore, pin)
+              const tapped = isPinStanding(standing, pin)
               return (
-              <button
-                key={pin}
-                onClick={() => togglePin(pin)}
-                disabled={disabled || !inPlay}
-                className={`
-                  w-12 h-12 rounded-full text-sm font-bold
-                  transition-colors duration-150
-                  ${
+                <button
+                  key={pin}
+                  onClick={() => togglePin(pin)}
+                  disabled={disabled || !inPlay}
+                  aria-pressed={inPlay ? tapped : undefined}
+                  // Tapped (still standing) is a filled white pin with a ring;
+                  // untapped is a dark outline; already down is dashed.
+                  className={`num h-13 w-13 rounded-full text-lg font-semibold transition-colors duration-150 short:h-tap short:w-tap short:text-base ${
                     !inPlay
-                      ? 'bg-transparent text-gray-600 border-2 border-dashed border-gray-700'
-                      : isPinStanding(standing, pin)
-                        ? 'bg-white text-gray-900 border-2 border-gray-900 shadow-md'
-                        : 'bg-gray-300 text-gray-500 border-2 border-gray-300'
-                  }
-                  ${disabled ? '' : 'active:scale-95'}
-                `}
-                aria-label={`Pin ${pin}${!inPlay ? ' already down' : isPinStanding(standing, pin) ? ' standing' : ' down'}`}
-              >
-                {pin}
-              </button>
+                      ? 'border-2 border-dashed border-line text-muted/50'
+                      : tapped
+                        ? 'bg-ink text-page ring-2 ring-accent ring-offset-2 ring-offset-page'
+                        : 'bg-surface text-ink ring-1 ring-line'
+                  } ${disabled ? '' : 'active:scale-95'}`}
+                  aria-label={`Pin ${pin}${!inPlay ? ' already down' : tapped ? ' standing' : ' down'}`}
+                >
+                  {pin}
+                </button>
               )
             })}
           </div>
@@ -90,45 +94,28 @@ export function PinDeck({
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-3 w-full max-w-xs">
-        <button
-          onClick={handleAllDown}
-          disabled={disabled || hasTaps}
-          className="flex-1 py-3 px-4 bg-green-600 text-white font-bold rounded-lg
-                     active:scale-95 transition-transform disabled:opacity-50"
-        >
+      <div className="flex w-full max-w-xs gap-2">
+        <button onClick={handleAllDown} disabled={disabled || hasTaps} className={`${allDownClass} min-h-13 flex-1 px-2 short:min-h-tap`}>
           {isFreshRack ? 'Strike' : 'Spare'}
         </button>
         {!isFreshRack && (
-          <button
-            onClick={handleMissed}
-            disabled={disabled || hasTaps}
-            className="flex-1 py-3 px-4 bg-red-600 text-white font-bold rounded-lg
-                       active:scale-95 transition-transform disabled:opacity-50"
-          >
+          <button onClick={handleMissed} disabled={disabled || hasTaps} className={`${dangerButton} min-h-13 flex-1 px-2 short:min-h-tap`}>
             Missed
           </button>
         )}
-        <button
-          onClick={handleConfirm}
-          disabled={disabled}
-          className="flex-1 py-3 px-4 bg-blue-600 text-white font-bold rounded-lg
-                     active:scale-95 transition-transform disabled:opacity-50"
-        >
+        <button onClick={handleConfirm} disabled={disabled} className={`${confirmClass} min-h-13 flex-1 px-2 short:min-h-tap`}>
           Confirm
         </button>
       </div>
 
-      {/* Clear selection */}
-      {standing !== 0 && (
-        <button
-          onClick={() => setStanding(0)}
-          disabled={disabled}
-          className="text-sm text-gray-500 underline disabled:opacity-50"
-        >
-          Clear selection
-        </button>
-      )}
+      {/* Clear selection. Upright, the row keeps its height so nothing below it jumps. */}
+      <div className="flex min-h-tap items-center short:min-h-0">
+        {hasTaps && (
+          <button onClick={() => setStanding(0)} disabled={disabled} className={quietTextButton}>
+            Clear selection
+          </button>
+        )}
+      </div>
     </div>
   )
 }

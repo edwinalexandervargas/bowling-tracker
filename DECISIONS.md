@@ -162,3 +162,18 @@
 - Decision: score entry no longer asks which ball was thrown. Frame has no ballId, and per-ball stats (byBall, the "By ball" table) are removed. Supersedes "Per-ball stats are shot stats only".
 - Alternatives: keep the picker but make it optional (dead control on the busiest screen, and a stats table that stays empty); record one ball per game instead of per frame (fewer taps, but wrong whenever I switch mid-game).
 - Why: the score screen is used one-handed between shots, so every control there has to earn its place. Balls and layouts still live in Arsenal.
+
+## Navigation: league-night bottom bar on phones, sidebar from 768px
+- Decision: on a phone the bottom bar holds Home, Score, Side pots, Nights and Menu; Menu opens a drawer with Stats, Arsenal, Patterns, Profile. From 768px, and on a phone held sideways, a sidebar shows all eight and there is no drawer. All three render from one list in navLinks.ts. Supersedes "Navigation: short bottom bar + side drawer".
+- Alternatives: put Side pots in the drawer (two taps away mid-game, exactly when I'd check it); drawer only with a top menu button (every switch is two taps and the corner is a stretch one-handed).
+- Why: Score and Side pots are the screens I flip between during a game, so both stay one thumb-tap away. Stats moves to the drawer because Home already shows the headline numbers.
+
+## Visual direction: Lane at night, role-named tokens, one dark theme
+- Decision: one dark theme (oil blue, maple accent, pin white) defined as role tokens in Tailwind's @theme: page, surface, raised, line, ink, muted, accent, on-accent, danger. Tailwind's default palette is switched off. Archivo Variable is bundled with the app; scores use its narrow width with fixed-width digits.
+- Alternatives: a light "scoresheet" theme (most legible sheet, but a bright screen in a dim alley and weaker glow effects); a "cosmic" theme with two loud accents (most personality, but tempting to signal state by colour alone); loading the font from Google (fails with no signal).
+- Why: the app is used in a dim alley, and one accent keeps states clear. Role names mean the palette can change in one file, and with the defaults off a screen can't use a colour that isn't a token.
+
+## Sign-in is optional, never a gate
+- Decision: the app is fully usable signed out. Sign-in lives at /login, reached from the menu and sidebar, and nothing waits on the auth check at startup.
+- Alternatives: require sign-in before anything else (blocks the app with no signal, and blocks it entirely if auth is misconfigured).
+- Why: offline-first means every tap saves locally first. An account is only needed for backup and sync.

@@ -3,6 +3,8 @@ import { useGameStore } from '../store/gameStore'
 import { parseInches, formatInches } from '../measure/inches'
 import { parseBallWeight, parseUsbcNumber } from '../profile/profileFields'
 import type { BowlingStyle, Hand } from '../types'
+import { Page } from '../components/ui'
+import { inputClass, primaryButton, secondaryButton, textButton, toggleClass } from '../components/styles'
 
 const handLabels: Record<Hand, string> = { left: 'Left', right: 'Right' }
 const styleLabels: Record<BowlingStyle, string> = {
@@ -20,7 +22,7 @@ function Segmented<T extends string>({ label, labels, value, onChange }: {
 }) {
   return (
     <div role="group" aria-label={label}>
-      <span className="text-sm text-gray-400">{label}</span>
+      <span className="text-sm text-muted">{label}</span>
       <div className="mt-1 flex gap-2">
         {(Object.keys(labels) as T[]).map((opt) => (
           <button
@@ -28,9 +30,7 @@ function Segmented<T extends string>({ label, labels, value, onChange }: {
             type="button"
             aria-pressed={value === opt}
             onClick={() => onChange(value === opt ? undefined : opt)}
-            className={`flex-1 rounded py-2 text-sm ${
-              value === opt ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-            }`}
+            className={toggleClass(value === opt)}
           >
             {labels[opt]}
           </button>
@@ -40,16 +40,15 @@ function Segmented<T extends string>({ label, labels, value, onChange }: {
   )
 }
 
-const inputClass = 'mt-1 w-full rounded bg-gray-800 px-3 py-2 text-white'
-const saveClass = 'w-full rounded bg-blue-600 py-2 font-medium hover:bg-blue-500'
-
 export function ProfileScreen() {
   return (
-    <div className="w-full max-w-sm space-y-8">
-      <h1 className="text-2xl font-bold">Profile</h1>
-      <PapSection />
-      <BowlerInfoSection />
-    </div>
+    <Page title="Profile" wide>
+      {/* Two columns from 1024px; stacked below that. */}
+      <div className="grid max-w-md gap-8 lg:max-w-none lg:grid-cols-2 lg:items-start">
+        <PapSection />
+        <BowlerInfoSection />
+      </div>
+    </Page>
   )
 }
 
@@ -63,11 +62,11 @@ function PapSection() {
     return (
       <section>
         <h2 className="text-lg font-semibold mb-2">PAP</h2>
-        <div className="flex items-center justify-between rounded bg-gray-800 px-3 py-3">
+        <div className="flex items-center justify-between rounded-xl bg-surface py-1 pr-1 pl-4 ring-1 ring-line">
           <span>
             {formatInches(profile.papOver!)}" over, {formatInches(Math.abs(up))}" {up < 0 ? 'down' : 'up'}
           </span>
-          <button type="button" onClick={() => setEditing(true)} className="text-sm text-blue-400">
+          <button type="button" onClick={() => setEditing(true)} className={textButton}>
             Edit
           </button>
         </div>
@@ -109,12 +108,12 @@ function PapForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
       <h2 className="text-lg font-semibold">PAP</h2>
 
       <label className="block">
-        <span className="text-sm text-gray-400">Over (inches)</span>
+        <span className="text-sm text-muted">Over (inches)</span>
         <input value={over} onChange={(e) => setOver(e.target.value)} placeholder="4 1/2" className={inputClass} />
       </label>
 
       <div>
-        <span className="text-sm text-gray-400">Vertical (inches)</span>
+        <span className="text-sm text-muted">Vertical (inches)</span>
         <div className="mt-1 mb-2 flex gap-2">
           {(['up', 'down'] as const).map((d) => (
             <button
@@ -122,9 +121,7 @@ function PapForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
               type="button"
               onClick={() => setDirection(d)}
               aria-pressed={direction === d}
-              className={`flex-1 rounded py-1 text-sm capitalize ${
-                direction === d ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400'
-              }`}
+              className={`${toggleClass(direction === d)} capitalize`}
             >
               {d}
             </button>
@@ -136,15 +133,15 @@ function PapForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
         </label>
       </div>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
       <div className="flex gap-2">
         {canCancel && (
-          <button type="button" onClick={onDone} className="flex-1 rounded bg-gray-700 py-2 font-medium">
+          <button type="button" onClick={onDone} className={`${secondaryButton} flex-1`}>
             Cancel
           </button>
         )}
-        <button type="submit" className={`${saveClass} flex-1`}>
+        <button type="submit" className={`${primaryButton} flex-1`}>
           Save PAP
         </button>
       </div>
@@ -165,10 +162,10 @@ function BowlerInfoSection() {
     return (
       <section>
         <h2 className="text-lg font-semibold mb-2">Bowler info</h2>
-        <div className="flex items-start justify-between rounded bg-gray-800 px-3 py-3">
-          <dl className="space-y-1">
+        <div className="flex items-start justify-between rounded-xl bg-surface py-1 pr-1 pl-4 ring-1 ring-line">
+          <dl className="space-y-1 py-2">
             <div className="flex gap-2">
-              <dt className="text-gray-400">Bowls</dt>
+              <dt className="text-muted">Bowls</dt>
               <dd>
                 {[profile?.hand && handLabels[profile.hand], profile?.style && styleLabels[profile.style]]
                   .filter(Boolean)
@@ -176,15 +173,15 @@ function BowlerInfoSection() {
               </dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-gray-400">USBC #</dt>
+              <dt className="text-muted">USBC #</dt>
               <dd>{profile?.usbcNumber ?? '—'}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-gray-400">Ball weight</dt>
+              <dt className="text-muted">Ball weight</dt>
               <dd>{profile?.ballWeight !== undefined ? `${profile.ballWeight} lbs` : '—'}</dd>
             </div>
           </dl>
-          <button type="button" onClick={() => setEditing(true)} className="text-sm text-blue-400">
+          <button type="button" onClick={() => setEditing(true)} className={textButton}>
             Edit
           </button>
         </div>
@@ -229,7 +226,7 @@ function BowlerInfoForm({ onDone, canCancel }: { onDone: () => void; canCancel: 
       <Segmented label="Style" labels={styleLabels} value={style} onChange={setStyle} />
 
       <label className="block">
-        <span className="text-sm text-gray-400">USBC # (optional)</span>
+        <span className="text-sm text-muted">USBC # (optional)</span>
         <input
           value={usbc}
           onChange={(e) => setUsbc(e.target.value)}
@@ -241,7 +238,7 @@ function BowlerInfoForm({ onDone, canCancel }: { onDone: () => void; canCancel: 
       </label>
 
       <label className="block">
-        <span className="text-sm text-gray-400">Ball weight (lbs, default for new balls)</span>
+        <span className="text-sm text-muted">Ball weight (lbs, default for new balls)</span>
         <input
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
@@ -252,16 +249,16 @@ function BowlerInfoForm({ onDone, canCancel }: { onDone: () => void; canCancel: 
       </label>
 
       {errors.map((err) => (
-        <p key={err} className="text-sm text-red-400">{err}</p>
+        <p key={err} role="alert" className="text-sm text-danger">{err}</p>
       ))}
 
       <div className="flex gap-2">
         {canCancel && (
-          <button type="button" onClick={onDone} className="flex-1 rounded bg-gray-700 py-2 font-medium">
+          <button type="button" onClick={onDone} className={`${secondaryButton} flex-1`}>
             Cancel
           </button>
         )}
-        <button type="submit" className={`${saveClass} flex-1`}>
+        <button type="submit" className={`${primaryButton} flex-1`}>
           Save info
         </button>
       </div>

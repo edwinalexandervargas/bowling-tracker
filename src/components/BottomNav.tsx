@@ -1,23 +1,25 @@
 import { useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { SideMenu } from './SideMenu'
-import { menuLinks } from './menuLinks'
+import { primaryLinks, moreLinks } from './navLinks'
+import { Icon } from './Icon'
 
-const tabs = [
-  { to: '/', label: 'Home' },
-  { to: '/score', label: 'Score' },
-  { to: '/nights', label: 'Nights' },
-  { to: '/stats', label: 'Stats' },
-]
-
+// The active tab gets a bar along its top edge and bolder text, as well as
+// the accent colour, so it can be told apart without relying on colour.
 const tabClass = (active: boolean) =>
-  `flex-1 py-3 text-center text-xs font-medium ${active ? 'text-white bg-gray-700' : 'text-gray-400'}`
+  `relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs ${
+    active
+      ? 'font-semibold text-accent before:absolute before:inset-x-3 before:top-0 before:h-0.5 before:rounded-full before:bg-accent'
+      : 'font-medium text-muted'
+  }`
 
+// Phone navigation: the league-night screens one thumb-tap away, the rest behind Menu.
+// Hidden from 768px up and on phones held sideways, where the Sidebar takes over.
 export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const { pathname } = useLocation()
-  const onMenuRoute = menuLinks.some((l) => pathname.startsWith(l.to))
+  const onMenuRoute = pathname === '/login' || moreLinks.some((l) => pathname.startsWith(l.to))
 
   const closeMenu = () => {
     setMenuOpen(false)
@@ -26,14 +28,13 @@ export function BottomNav() {
 
   return (
     <>
-      <nav aria-label="Main" className="fixed bottom-0 inset-x-0 bg-gray-800 border-t border-gray-700 flex">
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            end={tab.to === '/'}
-            className={({ isActive }) => tabClass(isActive)}
-          >
+      <nav
+        aria-label="Main"
+        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] md:hidden short:hidden"
+      >
+        {primaryLinks.map((tab) => (
+          <NavLink key={tab.to} to={tab.to} end={tab.to === '/'} className={({ isActive }) => tabClass(isActive)}>
+            <Icon name={tab.icon} />
             {tab.label}
           </NavLink>
         ))}
@@ -43,21 +44,10 @@ export function BottomNav() {
           onClick={() => setMenuOpen(true)}
           aria-expanded={menuOpen}
           aria-controls="side-menu"
-          aria-label="Menu"
-          className={`${tabClass(onMenuRoute)} flex justify-center items-center`}
+          className={tabClass(onMenuRoute)}
         >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            className="h-4 w-4"
-          >
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
-          </svg>
+          <Icon name="profile" />
+          Menu
         </button>
       </nav>
       <SideMenu open={menuOpen} onClose={closeMenu} />

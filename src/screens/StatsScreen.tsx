@@ -2,7 +2,9 @@ import { useMemo } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { summarize, byPattern } from '../stats/slices'
 import { pct, fmtPct } from '../stats/stats'
+import { count } from '../format'
 import { StatTile } from '../components/StatTile'
+import { Page, Card, SectionTitle } from '../components/ui'
 
 export function StatsScreen() {
   const sessions = useGameStore((s) => s.sessions)
@@ -16,19 +18,16 @@ export function StatsScreen() {
 
   if (shots.strikeChances === 0) {
     return (
-      <div className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-bold">Stats</h1>
-        <p className="text-gray-400">No shots recorded yet. Bowl a game on the Score tab.</p>
-      </div>
+      <Page title="Stats" wide>
+        <Card className="p-6 text-muted">No shots recorded yet. Bowl a game on the Score tab.</Card>
+      </Page>
     )
   }
 
   return (
-    <div className="w-full max-w-sm space-y-6">
-      <h1 className="text-2xl font-bold">Stats</h1>
-
-      <section className="grid grid-cols-3 gap-2">
-        <StatTile label="Average" value={score.average} sub={`${score.games} games`} />
+    <Page title="Stats" wide>
+      <section className="grid grid-cols-3 gap-2 xl:grid-cols-9">
+        <StatTile label="Average" value={score.average} sub={count(score.games, 'game')} />
         <StatTile label="High game" value={score.highGame} />
         <StatTile label="High series" value={overall.highSeries} />
         <StatTile label="Strike %" value={fmtPct(pct(shots.strikes, shots.strikeChances))} sub={`${shots.strikes}/${shots.strikeChances}`} />
@@ -39,25 +38,33 @@ export function StatsScreen() {
         <StatTile label="Sessions" value={overall.sessions} />
       </section>
 
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">By pattern</h2>
-        <table className="w-full text-sm">
-          <thead className="text-gray-400">
-            <tr><th className="text-left font-normal">Pattern</th><th className="font-normal">G</th><th className="font-normal">Avg</th><th className="font-normal">Strike</th><th className="font-normal">Spare</th></tr>
-          </thead>
-          <tbody>
-            {patternRows.map((r) => (
-              <tr key={r.key} className="border-t border-gray-800 text-center">
-                <td className="py-1 text-left">{r.label}</td>
-                <td>{r.score.games}</td>
-                <td>{r.score.average ?? '—'}</td>
-                <td>{fmtPct(pct(r.shots.strikes, r.shots.strikeChances)) ?? '—'}</td>
-                <td>{fmtPct(pct(r.shots.spares, r.shots.spareChances)) ?? '—'}</td>
+      <section>
+        <SectionTitle>By pattern</SectionTitle>
+        <Card className="overflow-x-auto px-4 py-2">
+          <table className="w-full text-sm">
+            <thead className="text-muted">
+              <tr>
+                <th scope="col" className="py-2 text-left font-normal">Pattern</th>
+                <th scope="col" className="py-2 text-right font-normal">Games</th>
+                <th scope="col" className="py-2 text-right font-normal">Avg</th>
+                <th scope="col" className="py-2 text-right font-normal">Strike</th>
+                <th scope="col" className="py-2 text-right font-normal">Spare</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="num text-base">
+              {patternRows.map((r) => (
+                <tr key={r.key} className="border-t border-line text-right">
+                  <th scope="row" className="py-2.5 pr-2 text-left font-sans text-sm font-medium [font-stretch:100%]">{r.label}</th>
+                  <td>{r.score.games}</td>
+                  <td>{r.score.average ?? '—'}</td>
+                  <td>{fmtPct(pct(r.shots.strikes, r.shots.strikeChances)) ?? '—'}</td>
+                  <td>{fmtPct(pct(r.shots.spares, r.shots.spareChances)) ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
       </section>
-    </div>
+    </Page>
   )
 }
