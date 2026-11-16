@@ -8,7 +8,7 @@ import { Sidebar } from './components/Sidebar'
 import { SidePotsScreen } from './screens/SidePotsScreen'
 import { ScoreScreen } from './screens/ScoreScreen'
 import { ArsenalScreen } from './screens/ArsenalScreen'
-import { AddBallScreen } from './screens/AddBallScreen'
+import { AddBallScreen, EditBallScreen } from './screens/AddBallScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { PatternsScreen } from './screens/PatternsScreen'
 import { HomeScreen } from './screens/HomeScreen'
@@ -50,6 +50,7 @@ const router = createBrowserRouter([
       { path: '/stats', element: <StatsScreen /> },
       { path: '/arsenal', element: <ArsenalScreen /> },
       { path: '/arsenal/new', element: <AddBallScreen /> },
+      { path: '/arsenal/:ballId', element: <EditBallScreen /> },
       { path: '/patterns', element: <PatternsScreen /> },
       { path: '/profile', element: <ProfileScreen /> },
       { path: '/login', element: <LoginScreen /> },

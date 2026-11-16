@@ -70,4 +70,17 @@ export function validatePatternDraft(draft: PatternDraft): ValidationResult {
   }
 }
 
+// A saved pattern back into form fields, for editing.
+export function patternToDraft(pattern: Pattern): PatternDraft {
+  const text = (value: number | undefined) => (value === undefined ? '' : String(value))
+  return {
+    kind: pattern.kind,
+    name: pattern.name,
+    length: text(pattern.length),
+    ratio: text(pattern.ratio),
+    volume: text(pattern.volume),
+    notes: pattern.notes ?? '',
+  }
+}
+
 export const formatRatio = (ratio: number) => `${ratio}:1`

@@ -1,13 +1,16 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import {
   validatePatternDraft,
+  patternToDraft,
   formatRatio,
   type PatternDraft,
   type PatternErrors,
 } from '../patterns/validatePattern'
+import type { Pattern } from '../types'
 import { Page, Card } from '../components/ui'
-import { inputClass, inputErrorClass, primaryButton, toggleClass } from '../components/styles'
+import { Icon } from '../components/Icon'
+import { dangerButton, inputClass, inputErrorClass, primaryButton, secondaryButton, toggleClass } from '../components/styles'
 
 const EMPTY: PatternDraft = { kind: 'sport', name: '', length: '', ratio: '', volume: '', notes: '' }
 
@@ -19,16 +22,43 @@ const FIELDS: { key: Exclude<keyof PatternDraft, 'kind'>; label: string; placeho
   { key: 'notes', label: 'Notes', placeholder: 'house shot' },
 ]
 
+// One form for adding and editing. Tapping a pattern in the list loads it into
+// the form; saving then replaces that pattern instead of adding a new one.
 export function PatternsScreen() {
   const patterns = useGameStore((s) => s.patterns)
   const addPattern = useGameStore((s) => s.addPattern)
+  const updatePattern = useGameStore((s) => s.updatePattern)
+  const removePattern = useGameStore((s) => s.removePattern)
 
   const [draft, setDraft] = useState<PatternDraft>(EMPTY)
   const [errors, setErrors] = useState<PatternErrors>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+
+  // If the pattern being edited was deleted on another device, fall back to adding
+  const editing = patterns.find((p) => p.id === editingId)
 
   function setField(key: Exclude<keyof PatternDraft, 'kind'>, value: string) {
     setDraft((d) => ({ ...d, [key]: value }))
     setErrors((e) => ({ ...e, [key]: undefined })) // clear that field's error as you fix it
+  }
+
+  function startAdding() {
+    setEditingId(null)
+    setDraft(EMPTY)
+    setErrors({})
+    setConfirmingDelete(false)
+  }
+
+  function startEditing(pattern: Pattern) {
+    setEditingId(pattern.id)
+    setDraft(patternToDraft(pattern))
+    setErrors({})
+    setConfirmingDelete(false)
+    // On a phone the form is above the list, so bring it into view and move focus to it
+    headingRef.current?.scrollIntoView({ block: 'start' })
+    headingRef.current?.focus()
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -36,9 +66,9 @@ export function PatternsScreen() {
     const result = validatePatternDraft(draft)
     if (!result.ok) return setErrors(result.errors)
 
-    addPattern({ id: crypto.randomUUID(), ...result.value })
-    setDraft(EMPTY)
-    setErrors({})
+    if (editing) updatePattern({ id: editing.id, ...result.value })
+    else addPattern({ id: crypto.randomUUID(), ...result.value })
+    startAdding()
   }
 
   return (
@@ -46,6 +76,9 @@ export function PatternsScreen() {
       {/* Form and list sit side by side from 1024px; stacked below that. */}
       <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
       <form onSubmit={handleSubmit} className="space-y-3">
+        <h2 ref={headingRef} tabIndex={-1} className="scroll-mt-4 text-lg font-semibold outline-none">
+          {editing ? `Edit ${editing.name}` : 'Add a pattern'}
+        </h2>
         <div className="flex gap-2">
           {(['house', 'sport'] as const).map((k) => (
             <button
@@ -78,9 +111,45 @@ export function PatternsScreen() {
             {errors[f.key] && <span className="text-xs text-danger">{errors[f.key]}</span>}
           </label>
         ))}
-        <button type="submit" className={`${primaryButton} w-full`}>
-          Add pattern
-        </button>
+
+        {editing ? (
+          <>
+            <div className="flex gap-2">
+              <button type="submit" className={`${primaryButton} flex-1`}>Save changes</button>
+              <button type="button" onClick={startAdding} className={`${secondaryButton} flex-1`}>Cancel</button>
+            </div>
+            {confirmingDelete ? (
+              <div className="space-y-3 rounded-xl bg-surface p-4 ring-1 ring-danger">
+                <p role="alert" className="text-sm">
+                  Delete {editing.name}? Nights bowled on it stay and count as house shot. This can't be undone.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removePattern(editing.id)
+                      startAdding()
+                    }}
+                    className={`${dangerButton} flex-1`}
+                  >
+                    Delete pattern
+                  </button>
+                  <button type="button" onClick={() => setConfirmingDelete(false)} className={`${secondaryButton} flex-1`}>
+                    Keep it
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setConfirmingDelete(true)} className={`${dangerButton} w-full`}>
+                Delete pattern
+              </button>
+            )}
+          </>
+        ) : (
+          <button type="submit" className={`${primaryButton} w-full`}>
+            Add pattern
+          </button>
+        )}
       </form>
 
       {patterns.length === 0 ? (
@@ -88,21 +157,37 @@ export function PatternsScreen() {
       ) : (
         <ul className="space-y-2">
           {patterns.map((p) => (
-            <li key={p.id} className="rounded-xl bg-surface p-4 ring-1 ring-line">
-              <p className="font-medium">
-                {p.name}
-                {p.kind === 'house' && <span className="ml-2 text-xs text-muted">House</span>}
-              </p>
-              <p className="num text-lg">
-                {[
-                  p.length !== undefined && `${p.length} ft`,
-                  p.ratio !== undefined && formatRatio(p.ratio),
-                  p.volume !== undefined && `${p.volume} mL`,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-              {p.notes && <p className="text-sm text-muted">{p.notes}</p>}
+            <li key={p.id}>
+              {/* The whole card is the button. The one being edited is outlined. */}
+              <button
+                type="button"
+                onClick={() => startEditing(p)}
+                aria-current={p.id === editing?.id ? 'true' : undefined}
+                className={`flex w-full items-center gap-3 rounded-xl bg-surface p-4 text-left transition active:bg-raised ${
+                  p.id === editing?.id ? 'ring-2 ring-accent' : 'ring-1 ring-line'
+                }`}
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">
+                    {p.name}
+                    {p.kind === 'house' && <span className="ml-2 text-xs text-muted">House</span>}
+                  </span>
+                  <span className="num block text-lg">
+                    {[
+                      p.length !== undefined && `${p.length} ft`,
+                      p.ratio !== undefined && formatRatio(p.ratio),
+                      p.volume !== undefined && `${p.volume} mL`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                  {p.notes && <span className="block text-sm text-muted">{p.notes}</span>}
+                </span>
+                <span className="flex items-center gap-1 text-sm font-medium text-accent">
+                  {p.id === editing?.id ? 'Editing' : 'Edit'}
+                  <Icon name="back" className="h-4 w-4 rotate-180" />
+                </span>
+              </button>
             </li>
           ))}
         </ul>

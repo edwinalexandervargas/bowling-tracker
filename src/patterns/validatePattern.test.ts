@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { validatePatternDraft, formatRatio, type PatternDraft } from './validatePattern'
+import type { Pattern } from '../types'
+import { validatePatternDraft, patternToDraft, formatRatio, type PatternDraft } from './validatePattern'
 
 const draft = (overrides: Partial<PatternDraft> = {}): PatternDraft => ({
   kind: 'sport',
@@ -94,5 +95,29 @@ describe('formatRatio', () => {
   it('adds :1', () => {
     expect(formatRatio(3.2)).toBe('3.2:1')
     expect(formatRatio(10)).toBe('10:1')
+  })
+})
+
+describe('patternToDraft', () => {
+  it('fills the form from a saved pattern', () => {
+    const pattern: Pattern = { id: 'p1', kind: 'sport', name: 'Shark', length: 44, ratio: 3.2, volume: 24.5, notes: 'heavy' }
+    expect(patternToDraft(pattern)).toEqual({ kind: 'sport', name: 'Shark', length: '44', ratio: '3.2', volume: '24.5', notes: 'heavy' })
+  })
+
+  it('leaves blank what a house shot never had', () => {
+    const pattern: Pattern = { id: 'p2', kind: 'house', name: 'Pinz house' }
+    expect(patternToDraft(pattern)).toEqual({ kind: 'house', name: 'Pinz house', length: '', ratio: '', volume: '', notes: '' })
+  })
+
+  it('saving an unchanged form gives back the same pattern', () => {
+    const patterns: Pattern[] = [
+      { id: 'p1', kind: 'sport', name: 'Shark', length: 44, ratio: 3.2, volume: 24.5, notes: 'heavy' },
+      { id: 'p2', kind: 'house', name: 'Pinz house' },
+      { id: 'p3', kind: 'house', name: 'Mega', length: 40 },
+    ]
+    for (const pattern of patterns) {
+      const result = validatePatternDraft(patternToDraft(pattern))
+      expect(result.ok && { id: pattern.id, ...result.value }).toEqual(pattern)
+    }
   })
 })

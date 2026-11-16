@@ -29,12 +29,15 @@ type AppState = {
 
   // Arsenal
   addBallSpec: (spec: BallSpec) => void
+  updateBallSpec: (id: string, updates: Partial<BallSpec>) => void
   addBall: (ball: Ball) => void
   updateBall: (id: string, updates: Partial<Ball>) => void
   removeBall: (id: string) => void
 
   // Patterns
   addPattern: (pattern: Pattern) => void
+  updatePattern: (pattern: Pattern) => void
+  removePattern: (id: string) => void
 
   // Seasons
   closeSeason: (leagueKey: string) => void
@@ -99,6 +102,12 @@ export const useGameStore = create<AppState>()(
       addBallSpec: (spec) =>
         set((state) => ({ ballSpecs: [...state.ballSpecs, spec] })),
 
+      // A model's details are shared by every copy of that ball
+      updateBallSpec: (id, updates) =>
+        set((state) => ({
+          ballSpecs: state.ballSpecs.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+        })),
+
       addBall: (ball) =>
         set((state) => ({ balls: [...state.balls, ball] })),
 
@@ -116,6 +125,14 @@ export const useGameStore = create<AppState>()(
 
       addPattern: (pattern) =>
         set((state) => ({ patterns: [...state.patterns, pattern] })),
+
+      // Replaces the whole pattern, so switching between house and sport can't leave stray fields
+      updatePattern: (pattern) =>
+        set((state) => ({ patterns: state.patterns.map((p) => (p.id === pattern.id ? pattern : p)) })),
+
+      // Nights bowled on a removed pattern stay, and count as house shot in stats
+      removePattern: (id) =>
+        set((state) => ({ patterns: state.patterns.filter((p) => p.id !== id) })),
 
       closeSeason: (leagueKey) =>
         set((state) => ({

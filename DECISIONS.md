@@ -198,3 +198,8 @@
 - Alternatives: manual backup and restore buttons (simple, but easy to forget and not really sync); live updates over a realtime connection (more complexity and battery than one bowler needs).
 - Why: a night bowled with no signal should back itself up later without me thinking about it. The rule fits in one sentence, and conflicts are rare because they are per night.
 - Risk: "newest" trusts each device's clock.
+
+## Editing reuses the add forms
+- Decision: tapping a ball opens the Add ball form filled in; tapping a pattern loads it into the form on the Patterns screen. Both get Save changes and a Delete with a confirm step. A ball model's details (brand, name, RG, differential) are shared by every copy of that ball.
+- Alternatives: edit in place on the card (fast, but cramped on a phone and a second form to keep in step); edit in a bottom sheet (focused, but the most new UI and focus handling).
+- Why: one form per thing means add and edit can't drift apart, and it was the smallest change.
