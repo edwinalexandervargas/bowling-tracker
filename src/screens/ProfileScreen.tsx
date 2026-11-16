@@ -4,7 +4,8 @@ import { parseInches, formatInches } from '../measure/inches'
 import { parseBallWeight, parseUsbcNumber } from '../profile/profileFields'
 import type { BowlingStyle, Hand } from '../types'
 import { Page } from '../components/ui'
-import { inputClass, primaryButton, secondaryButton, textButton, toggleClass } from '../components/styles'
+import { dangerButton, inputClass, primaryButton, secondaryButton, textButton, toggleClass } from '../components/styles'
+import { count } from '../format'
 
 const handLabels: Record<Hand, string> = { left: 'Left', right: 'Right' }
 const styleLabels: Record<BowlingStyle, string> = {
@@ -48,7 +49,64 @@ export function ProfileScreen() {
         <PapSection />
         <BowlerInfoSection />
       </div>
+      <DataSection />
     </Page>
+  )
+}
+
+// Reset: wipe every night so stats start again from zero.
+// It deletes for good, so it takes two taps: the button, then a confirm.
+function DataSection() {
+  const nights = useGameStore((s) => s.sessions.length)
+  const resetNights = useGameStore((s) => s.resetNights)
+  const [confirming, setConfirming] = useState(false)
+  const [done, setDone] = useState(false)
+
+  return (
+    <section className="max-w-md space-y-3 border-t border-line pt-6">
+      <h2 className="text-lg font-semibold">Reset nights and scores</h2>
+      <p className="text-sm text-muted">
+        Deletes every night and its games, so your stats start again from zero. Your arsenal, patterns and profile stay.
+        If you're signed in, the backed-up copies are deleted too.
+      </p>
+
+      {done && <p role="status" className="text-sm">Nights and scores cleared.</p>}
+
+      {nights === 0 ? (
+        !done && <p className="text-sm text-muted">There are no nights saved.</p>
+      ) : confirming ? (
+        <div className="space-y-3 rounded-xl bg-surface p-4 ring-1 ring-danger">
+          <p role="alert" className="text-sm">Delete {count(nights, 'night')}? This can't be undone.</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                resetNights()
+                setConfirming(false)
+                setDone(true)
+              }}
+              className={`${dangerButton} flex-1`}
+            >
+              Delete {count(nights, 'night')}
+            </button>
+            <button type="button" onClick={() => setConfirming(false)} className={`${secondaryButton} flex-1`}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setConfirming(true)
+            setDone(false)
+          }}
+          className={dangerButton}
+        >
+          Reset nights and scores
+        </button>
+      )}
+    </section>
   )
 }
 

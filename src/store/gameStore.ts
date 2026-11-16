@@ -44,6 +44,7 @@ type AppState = {
   startSession: (session: Session) => void
   startGame: () => void
   endSession: () => void
+  resetNights: () => void
 
   // Sync: write records downloaded from the account into the store
   applyRemote: (patch: Partial<Collections>) => void
@@ -157,6 +158,10 @@ export const useGameStore = create<AppState>()(
       },
 
       endSession: () => set({ activeEntry: null }),
+
+      // Clears every night and season close. Arsenal, patterns and profile stay.
+      // When signed in, the sync layer sees the removals and deletes the cloud copies too.
+      resetNights: () => set({ sessions: [], seasonCloses: [], activeEntry: null }),
 
       applyRemote: (patch) => set(patch),
 

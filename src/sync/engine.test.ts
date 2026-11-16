@@ -189,6 +189,25 @@ describe('syncOnce: two devices', () => {
     expect(pendingCount(phone.state.meta)).toBe(0)
   })
 
+  it('clearing every night on one device clears them on the other, and keeps the arsenal', async () => {
+    const server = new FakeServer()
+    const phone = new Device(), laptop = new Device()
+    phone.edit(1, () => ({ sessions: [night('n1'), night('n2')], balls: [{ id: 'b1' }], season_closes: [{ id: 'c1', leagueKey: 'brunswick', closedAt: '2026-11-16T05:00:00.000Z' }] }))
+    await sync(phone, server)
+    await sync(laptop, server)
+
+    phone.edit(5, () => ({ sessions: [], season_closes: [] }))   // what "Reset nights and scores" does
+    await sync(phone, server)
+    await sync(laptop, server)
+
+    for (const device of [phone, laptop]) {
+      expect(device.ids('sessions')).toEqual([])
+      expect(device.ids('season_closes')).toEqual([])
+      expect(device.ids('balls')).toEqual(['b1'])
+    }
+    expect(pendingCount(phone.state.meta)).toBe(0)
+  })
+
   it('a record created and removed before it ever uploaded leaves no trace', async () => {
     const server = new FakeServer()
     const phone = new Device()
