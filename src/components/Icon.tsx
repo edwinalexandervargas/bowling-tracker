@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export type IconName =
   | 'home' | 'score' | 'pots' | 'nights' | 'stats' | 'arsenal' | 'patterns' | 'profile'
-  | 'signin' | 'close' | 'back' | 'check' | 'target'
+  | 'signin' | 'close' | 'back' | 'check' | 'target' | 'sync'
 
 // Line icons on a 24x24 grid. They take their colour from the text colour.
 const SHAPES: Record<IconName, ReactNode> = {
@@ -29,6 +29,8 @@ const SHAPES: Record<IconName, ReactNode> = {
   back: <path d="M15 5l-7 7 7 7" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   target: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /></>,
+  // two arrows chasing each other
+  sync: <><path d="M20 12a8 8 0 0 0-14-5.3L4 9" /><path d="M4 4v5h5" /><path d="M4 12a8 8 0 0 0 14 5.3l2-2.3" /><path d="M20 20v-5h-5" /></>,
 }
 
 export function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {

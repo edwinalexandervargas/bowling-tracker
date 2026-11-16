@@ -1,13 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
+import { supabaseConfigured, supabaseKey, supabaseUrl } from './supabaseConfig'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+// Only import this file with a dynamic import(): it pulls in the Supabase
+// library, which is loaded on demand so it never delays the first screen.
+// The publishable key is safe in the browser; row-level security protects the data.
+if (!supabaseConfigured) throw new Error('Supabase is not configured')
 
-// The anon key is safe in the browser; row-level security in Supabase protects the data.
-export const supabaseConfigured = Boolean(url && anonKey)
-
-// `||`, not `??`: an env var set to an empty string must fall back too, or createClient
-// throws at import and the whole app fails to start.
-export const supabase = createClient(url || 'http://localhost', anonKey || 'missing', {
+export const supabase = createClient(supabaseUrl!, supabaseKey!, {
   auth: { persistSession: true, autoRefreshToken: true },
 })

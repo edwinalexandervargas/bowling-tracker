@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router'
 import { useAuthStore } from './auth/authStore'
+import { startSync } from './sync/sync'
 import { LoginScreen } from './screens/LoginScreen'
 import { BottomNav } from './components/BottomNav'
 import { Sidebar } from './components/Sidebar'
@@ -21,6 +22,8 @@ function Layout() {
   // the app is fully usable signed out and offline.
   const init = useAuthStore((s) => s.init)
   useEffect(() => init(), [init])
+  // Background backup and sync. It watches for changes and runs on its own.
+  useEffect(() => startSync(), [])
 
   return (
     <div className="flex min-h-dvh">

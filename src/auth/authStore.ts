@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { supabaseConfigured, supabaseProblem } from '../lib/supabaseConfig'
 
 type AuthState = {
   session: Session | null
@@ -11,6 +11,9 @@ type AuthState = {
   signOut: () => Promise<void>
 }
 
+// The Supabase library is loaded on demand, so the first screen never waits for it.
+const loadSupabase = () => import('../lib/supabase').then((m) => m.supabase)
+
 // Not persisted here: Supabase keeps the session in localStorage itself,
 // so a signed-in user stays signed in at the alley with no signal.
 export const useAuthStore = create<AuthState>()((set) => ({
@@ -18,17 +21,34 @@ export const useAuthStore = create<AuthState>()((set) => ({
   loading: true,
 
   init: () => {
-    supabase.auth.getSession().then(({ data }) => set({ session: data.session, loading: false }))
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => set({ session, loading: false }))
-    return () => data.subscription.unsubscribe()
+    if (!supabaseConfigured) {
+      set({ loading: false })
+      return () => {}
+    }
+    let cancelled = false
+    let unsubscribe = () => {}
+    loadSupabase().then((supabase) => {
+      if (cancelled) return
+      supabase.auth.getSession().then(({ data }) => set({ session: data.session, loading: false }))
+      const { data } = supabase.auth.onAuthStateChange((_event, session) => set({ session, loading: false }))
+      unsubscribe = () => data.subscription.unsubscribe()
+    })
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
   },
 
   signIn: async (email, password) => {
+    if (!supabaseConfigured) return supabaseProblem
+    const supabase = await loadSupabase()
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     return error?.message ?? null
   },
 
   signUp: async (email, password) => {
+    if (!supabaseConfigured) return supabaseProblem
+    const supabase = await loadSupabase()
     const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
     if (error) return error.message
     // With email confirmation on, there's no session until the link is clicked.
@@ -36,6 +56,8 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   signOut: async () => {
+    if (!supabaseConfigured) return
+    const supabase = await loadSupabase()
     await supabase.auth.signOut()
   },
 }))

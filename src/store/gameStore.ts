@@ -4,6 +4,7 @@ import { isFrameComplete } from '../scoring/frame'
 import { addShot } from '../game/game'
 import { removeLastShot } from '../game/removeLastShot'
 import type { Ball, BallSpec, Session, Pattern, BowlerProfile, Game, SeasonClose } from '../types'
+import type { Collections } from '../sync/tables'
 
 type GameEntry = {
   sessionId: string
@@ -43,6 +44,9 @@ type AppState = {
   startSession: (session: Session) => void
   startGame: () => void
   endSession: () => void
+
+  // Sync: write records downloaded from the account into the store
+  applyRemote: (patch: Partial<Collections>) => void
 
   // Entry flow
   recordShot: (pinsAfter: number) => void
@@ -153,6 +157,8 @@ export const useGameStore = create<AppState>()(
       },
 
       endSession: () => set({ activeEntry: null }),
+
+      applyRemote: (patch) => set(patch),
 
       recordShot: (pinsAfter) => {
         const state = get()

@@ -182,3 +182,19 @@
 - Decision: bingoLooks and threeSixNineLooks turn pot state into one of seven looks per square (won, lit, dim, miss, closest, target, idle). The screen only maps a look to classes. A line counts as "closest" once it has a hit; nothing glows after a pot is secured or lost; a finished night that never completed a line reads "Not won".
 - Alternatives: decide the look inside the component (untested branching in JSX); add "live" and "decided" handling to bingoBoard itself (mixes display concerns into the rules).
 - Why: what happened and what to show are different questions. The second depends on whether the night is live, which the rules shouldn't know about. As a pure function it is unit tested.
+
+## Auth: email and password
+- Decision: sign in with email and password through Supabase Auth. Password reset is a later item.
+- Alternatives: emailed six-digit code (every sign-in sends an email, and Supabase's built-in sender allows 2 per hour); Google sign-in (one tap, but needs a Google Cloud project and redirect setup outside the code).
+- Why: it was already built and tested, sign-in happens once per device, and it has the fewest moving parts outside my code.
+
+## Cloud schema: one row per record, games as JSON inside the night
+- Decision: a table per top-level thing (profiles, ball_specs, balls, patterns, sessions, season_closes). A night is one row with its games in a JSONB column. Primary key is (user_id, id). Row-level security limits every row to its owner.
+- Alternatives: one JSON blob per user (simplest, but a conflict can only be settled for everything at once); fully normalised down to one row per shot (queryable in SQL, but far more mapping and sync code, and my stats run in the browser anyway).
+- Why: a night is the unit the app reads and writes, so conflicts resolve per night and the mapping stays small, while still being real tables with real security rules.
+
+## Sync: automatic in the background, newest edit wins
+- Decision: every change is marked as waiting and uploaded when there is signal; newer records are downloaded on open, sign-in, focus and reconnect. Per record, the newest edit wins, enforced by a database trigger. Deletes are a deleted_at marker. The UI never waits on any of it.
+- Alternatives: manual backup and restore buttons (simple, but easy to forget and not really sync); live updates over a realtime connection (more complexity and battery than one bowler needs).
+- Why: a night bowled with no signal should back itself up later without me thinking about it. The rule fits in one sentence, and conflicts are rare because they are per night.
+- Risk: "newest" trusts each device's clock.

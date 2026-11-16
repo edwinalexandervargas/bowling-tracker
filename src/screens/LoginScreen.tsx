@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router'
 import { useAuthStore } from '../auth/authStore'
 import { validateCredentials, type CredentialErrors } from '../auth/validateCredentials'
-import { supabaseConfigured } from '../lib/supabase'
+import { supabaseConfigured, supabaseProblem } from '../lib/supabaseConfig'
 import { Card, PinRack, Segmented } from '../components/ui'
 import { inputClass, primaryButton } from '../components/styles'
 
@@ -39,12 +39,12 @@ export function LoginScreen() {
       <div className="text-center">
         <PinRack className="mx-auto h-12 w-12 text-accent" />
         <h1 className="display mt-3 text-2xl">{mode === 'signin' ? 'Sign in' : 'Create an account'}</h1>
-        <p className="mt-1 text-sm text-muted">Optional. Your scores are saved on this device either way.</p>
+        <p className="mt-1 text-sm text-muted">Optional. Scores are always saved on this device. Signing in also backs them up and keeps your devices in step.</p>
       </div>
 
-      {!supabaseConfigured && (
+      {supabaseProblem && (
         <Card className="p-4 text-sm text-accent">
-          Supabase isn't configured. Copy <code>.env.example</code> to <code>.env.local</code> and add your keys.
+          <p role="alert">{supabaseProblem}</p>
         </Card>
       )}
 
