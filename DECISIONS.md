@@ -152,3 +152,8 @@
 - Decision: the bottom bar keeps Score, Nights, Stats, plus a Menu tab. Menu opens a side drawer with Arsenal, Patterns, Profile. The Menu tab shows as active on those routes.
 - Alternatives: 6-tab bottom bar (cramped, ~60px per tab); hamburger drawer with everything (Score becomes two taps, and the top-corner button is hard to reach one-handed); "More" bottom sheet (no side menu).
 - Why: league-night screens stay one thumb-tap away, and setup screens (rarely used at the lane) move out of the way. The Menu button sits in the bar, so it's still thumb-reachable.
+
+## Side pots are derived, and a frame's mark is settled by its first rack
+- Decision: bingoBoard(games) and threeSixNine(games) are pure functions over a session's first 3 games; nothing about the pots is stored. A bingo square is decided by frameMark, which judges the first rack only: strike on ball 1 or spare with balls 1-2 is a hit (gutter then all ten is a spare), open is a miss. A 10th-frame square lights before the fill balls, which never count.
+- Alternatives: store pot state on the session (second source of truth, breaks on undo); wait for the whole 10th frame to finish (fill balls can't change the result, so it only delays the square).
+- Why: same rule as scores, computed at render from shots. Reusing isFrameComplete on the first rack means the 10th frame needs no special case.
