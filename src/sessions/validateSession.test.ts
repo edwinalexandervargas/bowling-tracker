@@ -22,7 +22,7 @@ describe('validateSessionDraft', () => {
     for (const type of ['league', 'tournament'] as const) {
       const r = validateSessionDraft(draft({ type, eventName: '   ' }), ids)
       expect(r.ok).toBe(false)
-      if (!r.ok) expect(r.errors.eventName).toBeDefined()
+      if (!r.ok) expect(r.errors.eventName).toBe(type === 'league' ? 'League name is required.' : 'Tournament name is required.')
     }
   })
 

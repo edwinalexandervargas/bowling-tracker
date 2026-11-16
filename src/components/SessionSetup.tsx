@@ -4,10 +4,11 @@ import type { SessionType } from '../types'
 import { validateSessionDraft, type SessionDraft, type SessionErrors } from '../sessions/validateSession'
 import { inputClass, inputErrorClass, primaryButton, toggleClass } from './styles'
 
-const TYPES: { value: SessionType; label: string }[] = [
-  { value: 'league', label: 'League' },
-  { value: 'tournament', label: 'Tournament' },
-  { value: 'practice', label: 'Practice' },
+// The name field is labelled after the tab that is selected.
+const TYPES: { value: SessionType; label: string; nameLabel: string; placeholder: string }[] = [
+  { value: 'league', label: 'League', nameLabel: 'League name', placeholder: 'Thursday Night Mixed' },
+  { value: 'tournament', label: 'Tournament', nameLabel: 'Tournament name', placeholder: 'City Championship' },
+  { value: 'practice', label: 'Practice', nameLabel: 'Practice name (optional)', placeholder: 'Spare drills' },
 ]
 
 const EMPTY: SessionDraft = { type: 'league', eventName: '', patternId: '' }
@@ -43,7 +44,7 @@ export function SessionSetup() {
     startGame()
   }
 
-  const nameOptional = draft.type === 'practice'
+  const selected = TYPES.find((t) => t.value === draft.type)!
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto w-full max-w-md space-y-4">
@@ -68,12 +69,12 @@ export function SessionSetup() {
 
       <label className="block">
         <span className="text-sm text-muted">
-          Event name{nameOptional && ' (optional)'}
+          {selected.nameLabel}
         </span>
         <input
           value={draft.eventName}
           onChange={(e) => setField('eventName', e.target.value)}
-          placeholder={nameOptional ? 'Spare drills' : 'Thursday Night Mixed'}
+          placeholder={selected.placeholder}
           className={`${inputClass} ${errors.eventName ? inputErrorClass : ''}`}
         />
         {errors.eventName && <span className="text-xs text-danger">{errors.eventName}</span>}

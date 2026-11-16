@@ -25,7 +25,8 @@ export function validateSessionDraft(
 
   const eventName = draft.eventName.trim()
   if (!eventName && draft.type !== 'practice') {
-    errors.eventName = `Event name is required for ${draft.type}.`
+    // Named after the tab that is selected, the same way the form labels the field
+    errors.eventName = draft.type === 'league' ? 'League name is required.' : 'Tournament name is required.'
   }
 
   // Blank = house shot. A non-blank id must point at a saved pattern.
