@@ -30,9 +30,9 @@ export function StatsScreen() {
         <StatTile label="Average" value={score.average} sub={count(score.games, 'game')} />
         <StatTile label="High game" value={score.highGame} />
         <StatTile label="High series" value={overall.highSeries} />
-        <StatTile label="Strike %" value={fmtPct(pct(shots.strikes, shots.strikeChances))} sub={`${shots.strikes}/${shots.strikeChances}`} />
-        <StatTile label="Spare %" value={fmtPct(pct(shots.spares, shots.spareChances))} sub={`${shots.spares}/${shots.spareChances}`} />
-        <StatTile label="Single pin %" value={fmtPct(pct(shots.singlePinSpares, shots.singlePinChances))} sub={`${shots.singlePinSpares}/${shots.singlePinChances}`} />
+        <StatTile label="Strike %" value={fmtPct(pct(shots.strikes, shots.strikeChances))} sub={`${shots.strikes} of ${shots.strikeChances}`} />
+        <StatTile label="Spare %" value={fmtPct(pct(shots.spares, shots.spareChances))} sub={`${shots.spares} of ${shots.spareChances}`} />
+        <StatTile label="Single pin %" value={fmtPct(pct(shots.singlePinSpares, shots.singlePinChances))} sub={`${shots.singlePinSpares} of ${shots.singlePinChances}`} />
         <StatTile label="Open frames" value={shots.openFrames} sub={`of ${shots.frames}`} />
         <StatTile label="Splits" value={shots.splits} sub={`${shots.splitsConverted} made`} />
         <StatTile label="Sessions" value={overall.sessions} />
@@ -46,7 +46,7 @@ export function StatsScreen() {
               <tr>
                 <th scope="col" className="py-2 text-left font-normal">Pattern</th>
                 <th scope="col" className="py-2 text-right font-normal">Games</th>
-                <th scope="col" className="py-2 text-right font-normal">Avg</th>
+                <th scope="col" className="py-2 text-right font-normal">Average</th>
                 <th scope="col" className="py-2 text-right font-normal">Strike</th>
                 <th scope="col" className="py-2 text-right font-normal">Spare</th>
               </tr>

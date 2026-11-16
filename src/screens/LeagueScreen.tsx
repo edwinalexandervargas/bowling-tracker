@@ -100,7 +100,7 @@ export function LeagueScreen() {
                   <Link to={`/nights/${session.id}`} className="flex items-center justify-between p-4 transition active:bg-raised">
                     <div>
                       <p className="font-medium">
-                        Wk {rows.length - i} · {new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        Week {rows.length - i} · {new Date(session.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </p>
                       <p className="text-xs text-muted">
                         {patterns.find((p) => p.id === session.patternId)?.name ?? 'House shot'}

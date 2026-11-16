@@ -55,8 +55,8 @@ export function NightDetailScreen() {
 
       <section className="grid grid-cols-3 gap-2 md:grid-cols-6">
         <StatTile label="Series" value={series} sub={count(done.length, 'game')} />
-        <StatTile label="Strike %" value={fmtPct(pct(shots.strikes, shots.strikeChances))} sub={`${shots.strikes}/${shots.strikeChances}`} />
-        <StatTile label="Spare %" value={fmtPct(pct(shots.spares, shots.spareChances))} sub={`${shots.spares}/${shots.spareChances}`} />
+        <StatTile label="Strike %" value={fmtPct(pct(shots.strikes, shots.strikeChances))} sub={`${shots.strikes} of ${shots.strikeChances}`} />
+        <StatTile label="Spare %" value={fmtPct(pct(shots.spares, shots.spareChances))} sub={`${shots.spares} of ${shots.spareChances}`} />
         <StatTile label="Single pin %" value={fmtPct(pct(shots.singlePinSpares, shots.singlePinChances))} />
         <StatTile label="Opens" value={shots.openFrames} />
         <StatTile label="Splits" value={shots.splits} sub={`${shots.splitsConverted} made`} />
