@@ -157,3 +157,8 @@
 - Decision: bingoBoard(games) and threeSixNine(games) are pure functions over a session's first 3 games; nothing about the pots is stored. A bingo square is decided by frameMark, which judges the first rack only: strike on ball 1 or spare with balls 1-2 is a hit (gutter then all ten is a spare), open is a miss. A 10th-frame square lights before the fill balls, which never count.
 - Alternatives: store pot state on the session (second source of truth, breaks on undo); wait for the whole 10th frame to finish (fill balls can't change the result, so it only delays the square).
 - Why: same rule as scores, computed at render from shots. Reusing isFrameComplete on the first rack means the 10th frame needs no special case.
+
+## Scoring doesn't record a ball; the arsenal is reference only
+- Decision: score entry no longer asks which ball was thrown. Frame has no ballId, and per-ball stats (byBall, the "By ball" table) are removed. Supersedes "Per-ball stats are shot stats only".
+- Alternatives: keep the picker but make it optional (dead control on the busiest screen, and a stats table that stays empty); record one ball per game instead of per frame (fewer taps, but wrong whenever I switch mid-game).
+- Why: the score screen is used one-handed between shots, so every control there has to earn its place. Balls and layouts still live in Arsenal.

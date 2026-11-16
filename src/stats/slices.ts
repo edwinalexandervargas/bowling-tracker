@@ -43,22 +43,6 @@ export function byPattern(sessions: Session[], patterns: Pattern[]): PatternSlic
     .sort((a, b) => b.score.games - a.score.games || a.label.localeCompare(b.label))
 }
 
-export type BallSlice = { ballId: string; shots: ShotStats }
-
-// Per ball. The ball is recorded per frame, so only shot stats apply here:
-// a game score can't be split between the balls used in it.
-// Frames with no ball recorded are left out.
-export function byBall(sessions: Session[]): BallSlice[] {
-  const groups = new Map<string, Frame[]>()
-  for (const f of allFrames(sessions)) {
-    if (!f.ballId) continue
-    groups.set(f.ballId, [...(groups.get(f.ballId) ?? []), f])
-  }
-  return [...groups.entries()]
-    .map(([ballId, frames]) => ({ ballId, shots: shotStats(frames) }))
-    .sort((a, b) => b.shots.strikeChances - a.shots.strikeChances)
-}
-
 export type NightSummary = {
   session: Session
   scores: (number | null)[]   // one per game, null while in progress

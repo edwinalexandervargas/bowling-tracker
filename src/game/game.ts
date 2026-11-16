@@ -30,14 +30,13 @@ export function nextShotContext(game: Game, frameIndex: number): ShotContext {
 export function addShot(
   game: Game,
   frameIndex: number,
-  pinsAfter: number,
-  ballId?: string
+  pinsAfter: number
 ): Game {
   if (frameIndex < 0 || frameIndex > 9) {
     throw new Error(`Invalid frame index: ${frameIndex}`)
   }
 
-  const frame = game.frames[frameIndex] ?? { shots: [], ballId }
+  const frame = game.frames[frameIndex] ?? { shots: [] }
 
   if (isFrameComplete(frame.shots, frameIndex)) {
     throw new Error(`Frame ${frameIndex + 1} is already complete`)

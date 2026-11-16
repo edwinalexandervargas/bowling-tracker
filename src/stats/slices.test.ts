@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import type { Frame, Game, Pattern, Session } from '../types'
-import { summarize, byPattern, byBall, byLeague, isSportShot, houseShotSessions, leagueSeasons, nights, HOUSE_SHOT } from './slices'
+import { summarize, byPattern, byLeague, isSportShot, houseShotSessions, leagueSeasons, nights, HOUSE_SHOT } from './slices'
 
 const FULL = 1023
 const s = (pinsBefore: number, pinsAfter: number) => ({ pinsBefore, pinsAfter })
-const strike = (ballId?: string): Frame => ({ shots: [s(FULL, 0)], ballId })
-const open9 = (ballId?: string): Frame => ({ shots: [s(FULL, 512), s(512, 512)], ballId })
+const strike = (): Frame => ({ shots: [s(FULL, 0)] })
+const open9 = (): Frame => ({ shots: [s(FULL, 512), s(512, 512)] })
 
-const perfect = (ballId?: string): Game => ({
+const perfect = (): Game => ({
   id: crypto.randomUUID(),
-  frames: [...Array.from({ length: 9 }, () => strike(ballId)), { shots: [s(FULL, 0), s(FULL, 0), s(FULL, 0)], ballId }],
+  frames: [...Array.from({ length: 9 }, () => strike()), { shots: [s(FULL, 0), s(FULL, 0), s(FULL, 0)] }],
 })
-const ninety = (ballId?: string): Game => ({ id: crypto.randomUUID(), frames: Array.from({ length: 10 }, () => open9(ballId)) })
+const ninety = (): Game => ({ id: crypto.randomUUID(), frames: Array.from({ length: 10 }, () => open9()) })
 
 const session = (date: string, games: Game[], patternId?: string): Session => ({
   id: crypto.randomUUID(), date, type: 'league', eventName: 'Thu', patternId, games,
@@ -41,17 +41,6 @@ describe('byPattern', () => {
     expect(slices.map((x) => [x.key, x.label, x.score.games])).toEqual([
       [HOUSE_SHOT, 'House shot', 2],
       ['shark', 'Shark', 1],
-    ])
-  })
-})
-
-describe('byBall', () => {
-  it('groups frames by ball and skips frames with no ball', () => {
-    const mixed: Game = { id: 'g', frames: [strike('a'), strike('a'), open9('b'), open9()] }
-    const slices = byBall([session('2026-11-12', [mixed])])
-    expect(slices).toEqual([
-      expect.objectContaining({ ballId: 'a', shots: expect.objectContaining({ strikes: 2, strikeChances: 2 }) }),
-      expect.objectContaining({ ballId: 'b', shots: expect.objectContaining({ strikes: 0, openFrames: 1 }) }),
     ])
   })
 })

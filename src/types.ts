@@ -43,7 +43,6 @@ export type Shot = {
 
 export type Frame = {
   shots: Shot[]          // 1 (strike), 2 (spare/open), or up to 3 in the 10th
-  ballId?: string        // which ball was used this frame
 }
 
 export type Game = {

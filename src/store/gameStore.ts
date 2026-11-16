@@ -9,7 +9,6 @@ type GameEntry = {
   sessionId: string
   gameIndex: number
   frameIndex: number
-  currentBallId?: string
 }
 
 type AppState = {
@@ -42,14 +41,13 @@ type AppState = {
 
   // Session flow
   startSession: (session: Session) => void
-  startGame: (ballId?: string) => void
+  startGame: () => void
   endSession: () => void
 
   // Entry flow
   recordShot: (pinsAfter: number) => void
   undoShot: () => void
   goToFrame: (frameIndex: number) => void
-  changeBall: (ballId: string) => void
   nextGame: () => void
 }
 
@@ -135,7 +133,7 @@ export const useGameStore = create<AppState>()(
           sessions: [...state.sessions, session],
         })),
 
-      startGame: (ballId) => {
+      startGame: () => {
         const state = get()
         const session = state.sessions[state.sessions.length - 1]
         if (!session) return
@@ -150,7 +148,6 @@ export const useGameStore = create<AppState>()(
             sessionId: session.id,
             gameIndex: session.games.length, // old length = index of the new game
             frameIndex: 0,
-            currentBallId: ballId,
           },
         })
       },
@@ -166,7 +163,7 @@ export const useGameStore = create<AppState>()(
         if (!game) return
 
         // All shot rules live in the tested pure function
-        const newGame = addShot(game, entry.frameIndex, pinsAfter, entry.currentBallId)
+        const newGame = addShot(game, entry.frameIndex, pinsAfter)
 
         // Auto-advance when the frame is done (frames 1-9 only)
         const frame = newGame.frames[entry.frameIndex]
@@ -205,32 +202,9 @@ export const useGameStore = create<AppState>()(
             : null,
         })),
 
-      changeBall: (ballId) => {
-        const state = get()
-        const entry = state.activeEntry
-        if (!entry) return
-
-        const game = getActiveGame(state)
-        if (!game) return
-
-        // New game with the current frame's ball swapped (if that frame exists yet)
-        const newGame: Game = {
-          ...game,
-          frames: game.frames.map((f, i) =>
-            i === entry.frameIndex ? { ...f, ballId } : f
-          ),
-        }
-
-        set({
-          sessions: replaceGame(state.sessions, entry.sessionId, entry.gameIndex, newGame),
-          activeEntry: { ...entry, currentBallId: ballId },
-        })
-      },
-
       nextGame: () => {
-        const entry = get().activeEntry
-        if (!entry) return
-        get().startGame(entry.currentBallId)
+        if (!get().activeEntry) return
+        get().startGame()
       },
     }),
     {
