@@ -39,29 +39,30 @@ describe('bingoBoard: layout', () => {
     expect(line(board, 'diag-up').squares).toEqual([20, 16, 12, 8, 4])
   })
 
-  it('nothing bowled: every square is a target, every line alive, all 12 tied for closest', () => {
+  it('nothing bowled: every square is a target, every line could still go either way', () => {
     expect(board.status).toBe('alive')
     expect(displays(board)).toEqual(Array(25).fill('target'))
     expect(board.lines.every((l) => l.status === 'alive' && l.hits === 0)).toBe(true)
+    expect(line(board, 'row-1').kinds).toEqual(['strikes', 'spares'])
     expect(board.closest).toEqual({ lineIds: ALL_LINE_IDS, needed: 5 })
   })
 })
 
 describe('bingoBoard: squares', () => {
-  it('strike and spare are hits, an open frame is a miss', () => {
+  it('a square carries the frame mark itself', () => {
     const board = bingoBoard([game('X / -')])
-    expect(board.squares.slice(0, 4).map((sq) => sq.result)).toEqual(['hit', 'hit', 'miss', 'pending'])
+    expect(board.squares.slice(0, 4).map((sq) => sq.mark)).toEqual(['strike', 'spare', 'open', 'pending'])
   })
 
   it('a frame with only its first ball thrown is still pending', () => {
     const board = bingoBoard([game('X ?')])
-    expect(board.squares[1]).toMatchObject({ result: 'pending', display: 'target' })
+    expect(board.squares[1]).toMatchObject({ mark: 'pending', display: 'target' })
     expect(board.lines.every((l) => l.status === 'alive')).toBe(true)
   })
 
   it('open in game 1 frame 1 kills row 1, column 1 and the down diagonal, nothing else', () => {
     const board = bingoBoard([game('-')])
-    expect(board.squares[0]).toMatchObject({ result: 'miss', display: 'miss' })
+    expect(board.squares[0]).toMatchObject({ mark: 'open', display: 'miss' })
     const dead = board.lines.filter((l) => l.status === 'dead').map((l) => l.id)
     expect(dead).toEqual(['row-1', 'col-1', 'diag-down'])
     expect(board.lines.filter((l) => l.status === 'alive')).toHaveLength(9)
@@ -70,39 +71,69 @@ describe('bingoBoard: squares', () => {
     expect(board.squares[1].display).toBe('target')
   })
 
-  it('a hit is lit while any line through it is alive, dim once they are all dead', () => {
+  it('a mark is lit while a line through it can still win with that mark', () => {
     // Square 0 open kills row 1; square 6 open kills column 2.
     const board = bingoBoard([game('- X X X X X -')])
-    expect(board.squares[1]).toMatchObject({ result: 'hit', display: 'dim' })   // row 1 + col 2, both dead
-    expect(board.squares[2]).toMatchObject({ result: 'hit', display: 'lit' })   // col 3 still alive
+    expect(board.squares[1]).toMatchObject({ mark: 'strike', display: 'dim' })   // row 1 + col 2, both dead
+    expect(board.squares[2]).toMatchObject({ mark: 'strike', display: 'lit' })   // col 3 still alive
+  })
+
+  it('a strike goes dim once every line through it holds a spare', () => {
+    // Row 1 and column 2 each hold one of both kinds, so neither can win.
+    const board = bingoBoard([game('/ X X X X X /')])
+    expect(line(board, 'row-1').status).toBe('dead')
+    expect(line(board, 'col-2').status).toBe('dead')
+    expect(board.squares[1]).toMatchObject({ mark: 'strike', display: 'dim' })
+    // The spare in frame 1 still has the down diagonal, which holds spares only.
+    expect(board.squares[0]).toMatchObject({ mark: 'spare', display: 'lit' })
   })
 
   it('a pending square is idle when every line through it is dead, even if the pot is alive', () => {
     // Square 4 open kills column 5, square 5 open kills row 2: square 9 (game 1 frame 10) has no line left.
     const board = bingoBoard([game('X X X X - - X X X')])
-    expect(board.squares[9]).toMatchObject({ result: 'pending', display: 'idle' })
+    expect(board.squares[9]).toMatchObject({ mark: 'pending', display: 'idle' })
     expect(board.squares[10].display).toBe('target')
     expect(board.status).toBe('alive')
   })
 })
 
-describe('bingoBoard: winning', () => {
-  it('row 1 wins after 5 frames and secures the pot', () => {
-    const board = bingoBoard([game('X X / / X')])
-    expect(line(board, 'row-1')).toMatchObject({ status: 'won', hits: 5 })
+describe('bingoBoard: a line must be all strikes or all spares', () => {
+  it('five strikes wins', () => {
+    const board = bingoBoard([game('X X X X X')])
+    expect(line(board, 'row-1')).toMatchObject({ status: 'won', kinds: ['strikes'], hits: 5 })
     expect(board.status).toBe('secured')
     expect(board.wonLineIds).toEqual(['row-1'])
-    expect(displays(board).slice(0, 5)).toEqual(Array(5).fill('lit'))
   })
 
-  it('a won line is not offered as the closest line', () => {
+  it('five spares wins', () => {
+    const board = bingoBoard([game('/ / / / /')])
+    expect(line(board, 'row-1')).toMatchObject({ status: 'won', kinds: ['spares'], hits: 5 })
+    expect(board.status).toBe('secured')
+  })
+
+  it('five marks of mixed kinds is not a win: the line is dead', () => {
     const board = bingoBoard([game('X X / / X')])
-    expect(board.closest?.lineIds).not.toContain('row-1')
-    expect(board.closest?.needed).toBe(4)   // each column and both diagonals have 1 hit
+    expect(line(board, 'row-1')).toMatchObject({ status: 'dead', kinds: [], hits: 0 })
+    expect(board.status).toBe('alive')
+    expect(board.wonLineIds).toEqual([])
   })
 
-  it('down diagonal wins even when every row and column is dead', () => {
-    // Hits only on squares 0, 6, 12, 18, 24.
+  it('one strike and one spare kills a line immediately, with three frames still to bowl', () => {
+    const board = bingoBoard([game('X /')])
+    expect(line(board, 'row-1').status).toBe('dead')
+    // Each of those squares still sits on lines that are alive.
+    expect(line(board, 'col-1')).toMatchObject({ status: 'alive', kinds: ['strikes'], hits: 1 })
+    expect(line(board, 'col-2')).toMatchObject({ status: 'alive', kinds: ['spares'], hits: 1 })
+  })
+
+  it('a strike narrows a line to strikes only', () => {
+    const board = bingoBoard([game('X')])
+    expect(line(board, 'row-1')).toMatchObject({ kinds: ['strikes'], hits: 1 })
+    expect(line(board, 'row-2').kinds).toEqual(['strikes', 'spares'])
+  })
+
+  it('down diagonal wins on five strikes even when every row and column is dead', () => {
+    // Strikes only on squares 0, 6, 12, 18, 24.
     const board = bingoBoard([
       game('X - - - - - X - - -'),
       game('- - X - - - - - X -'),
@@ -116,14 +147,14 @@ describe('bingoBoard: winning', () => {
     expect(board.closest).toBeNull()
   })
 
-  it('up diagonal wins through game 3 frame 1', () => {
-    // Hits only on squares 4, 8, 12, 16, 20.
+  it('up diagonal wins on five spares through game 3 frame 1', () => {
+    // Spares only on squares 4, 8, 12, 16, 20.
     const board = bingoBoard([
-      game('- - - - X - - - X -'),
-      game('- - X - - - X - - -'),
-      game('X'),
+      game('- - - - / - - - / -'),
+      game('- - / - - - / - - -'),
+      game('/'),
     ])
-    expect(line(board, 'diag-up').status).toBe('won')
+    expect(line(board, 'diag-up')).toMatchObject({ status: 'won', kinds: ['spares'] })
     expect(board.status).toBe('secured')
   })
 
@@ -131,10 +162,16 @@ describe('bingoBoard: winning', () => {
     const board = bingoBoard([game('X X X X X X X X X X')])
     expect(board.wonLineIds).toEqual(['row-1', 'row-2'])
   })
+
+  it('a line of four strikes and one spare is dead, not one away', () => {
+    const board = bingoBoard([game('X X X X /')])
+    expect(line(board, 'row-1').status).toBe('dead')
+    expect(board.closest?.lineIds).not.toContain('row-1')
+  })
 })
 
 describe('bingoBoard: losing', () => {
-  // Opens on squares 0, 1, 7, 13, 19, 20 put a miss on all 12 lines.
+  // Opens on squares 0, 1, 7, 13, 19, 20 put an open frame on all 12 lines.
   const lost = bingoBoard([
     game('- - X X X X X - X X'),
     game('X X X - X X X X X -'),
@@ -148,14 +185,21 @@ describe('bingoBoard: losing', () => {
     expect(lost.closest).toBeNull()
   })
 
-  it('on a lost board hits go dim and unbowled squares go idle', () => {
-    expect(lost.squares[2].display).toBe('dim')
-    expect(lost.squares[0].display).toBe('miss')
-    expect(displays(lost).slice(21)).toEqual(['idle', 'idle', 'idle', 'idle'])
+  it('a board can also be lost with no open frame at all, by mixing marks', () => {
+    // Spares on squares 1, 7, 12, 13, 19 and 20: every line holds a strike and
+    // a spare, so none can be all of one kind, and nothing was left standing.
+    const board = bingoBoard([
+      game('X / X X X X X / X X'),
+      game('X X / / X X X X X /'),
+      game('/ X X X X'),
+    ])
+    expect(board.squares.every((sq) => sq.mark === 'strike' || sq.mark === 'spare')).toBe(true)
+    expect(board.lines.every((l) => l.status === 'dead')).toBe(true)
+    expect(board.status).toBe('lost')
   })
 
   it('11 dead lines is not lost yet', () => {
-    // Same as above without the open on square 0: the down diagonal survives.
+    // Same as the first fixture without the open on square 0: the down diagonal survives.
     const board = bingoBoard([
       game('X - X X X X X - X X'),
       game('X X X - X X X X X -'),
@@ -169,9 +213,16 @@ describe('bingoBoard: losing', () => {
 })
 
 describe('bingoBoard: closest line', () => {
-  it('is the alive line needing the fewest squares', () => {
+  it('is the alive line needing the fewest squares of one kind', () => {
     const board = bingoBoard([game('X X X')])
     expect(board.closest).toEqual({ lineIds: ['row-1'], needed: 2 })
+  })
+
+  it('counts only the kind the line can still win with', () => {
+    // Row 1 is dead (mixed). Column 1 has one spare, column 2 one strike: both need 4.
+    const board = bingoBoard([game('/ X')])
+    expect(board.closest?.needed).toBe(4)
+    expect(board.closest?.lineIds).toEqual(['col-1', 'col-2', 'diag-down'])
   })
 
   it('returns every line tied for fewest', () => {
@@ -179,9 +230,9 @@ describe('bingoBoard: closest line', () => {
     expect(board.closest).toEqual({ lineIds: ['row-1', 'col-1', 'diag-down'], needed: 4 })
   })
 
-  it('ignores a dead line however many hits it has', () => {
+  it('ignores a dead line however many marks it has', () => {
     const board = bingoBoard([game('X X X X -')])
-    expect(line(board, 'row-1')).toMatchObject({ status: 'dead', hits: 4 })
+    expect(line(board, 'row-1')).toMatchObject({ status: 'dead', hits: 0 })
     expect(board.closest?.lineIds).not.toContain('row-1')
     expect(board.closest?.needed).toBe(4)
   })
@@ -192,39 +243,44 @@ describe('bingoBoard: 10th frame (game 1 frame 10 is square 9)', () => {
   const withTenth = (shots: { pinsBefore: number; pinsAfter: number }[]): Game =>
     gameOf([...frames(nine), { shots }])
 
-  it('strike on the first ball is a hit before the fill balls, and wins row 2', () => {
+  it('strike on the first ball counts before the fill balls, and wins row 2', () => {
     const board = bingoBoard([withTenth([s(FULL, 0)])])
-    expect(board.squares[9].result).toBe('hit')
+    expect(board.squares[9].mark).toBe('strike')
     expect(line(board, 'row-2').status).toBe('won')
   })
 
-  it('strike then open fill balls is still a hit', () => {
+  it('strike then open fill balls is still a strike', () => {
     const board = bingoBoard([withTenth([s(FULL, 0), s(FULL, TEN_PIN), s(TEN_PIN, TEN_PIN)])])
-    expect(board.squares[9].result).toBe('hit')
+    expect(board.squares[9].mark).toBe('strike')
   })
 
-  it('spare with the first two balls is a hit whatever the fill ball does', () => {
+  it('spare with the first two balls is a spare whatever the fill ball does', () => {
     const board = bingoBoard([withTenth([s(FULL, TEN_PIN), s(TEN_PIN, 0), s(FULL, FULL)])])
-    expect(board.squares[9].result).toBe('hit')
+    expect(board.squares[9].mark).toBe('spare')
   })
 
-  it('gutter then all ten in the 10th is a spare, so a hit', () => {
+  it('gutter then all ten in the 10th is a spare, which kills a row of strikes', () => {
     const board = bingoBoard([withTenth([s(FULL, FULL), s(FULL, 0)])])
-    expect(board.squares[9].result).toBe('hit')
-    expect(line(board, 'row-2').status).toBe('won')
+    expect(board.squares[9].mark).toBe('spare')
+    expect(line(board, 'row-2').status).toBe('dead')
   })
 
-  it('open 10th is a miss and kills row 2 and column 5', () => {
+  it('a 10th-frame spare completes a row of spares', () => {
+    const board = bingoBoard([gameOf([...frames('X X X X X / / / /'), { shots: [s(FULL, TEN_PIN), s(TEN_PIN, 0)] }])])
+    expect(line(board, 'row-2')).toMatchObject({ status: 'won', kinds: ['spares'] })
+  })
+
+  it('open 10th kills row 2 and column 5', () => {
     const board = bingoBoard([withTenth([s(FULL, TEN_PIN), s(TEN_PIN, TEN_PIN)])])
-    expect(board.squares[9].result).toBe('miss')
+    expect(board.squares[9].mark).toBe('open')
     expect(line(board, 'row-2').status).toBe('dead')
     expect(line(board, 'col-5').status).toBe('dead')
   })
 
   it('first ball only in the 10th is pending', () => {
     const board = bingoBoard([withTenth([s(FULL, TEN_PIN)])])
-    expect(board.squares[9].result).toBe('pending')
-    expect(line(board, 'row-2')).toMatchObject({ status: 'alive', hits: 4 })
+    expect(board.squares[9].mark).toBe('pending')
+    expect(line(board, 'row-2')).toMatchObject({ status: 'alive', kinds: ['strikes'], hits: 4 })
   })
 })
 
@@ -240,7 +296,7 @@ describe('bingoBoard: number of games', () => {
 
   it('two games bowled: row 5 is all pending and cannot be dead', () => {
     const board = bingoBoard([game(allOpens), game(allOpens)])
-    expect(line(board, 'row-5')).toMatchObject({ status: 'alive', hits: 0 })
+    expect(line(board, 'row-5')).toMatchObject({ status: 'alive', hits: 0, kinds: ['strikes', 'spares'] })
     expect(board.status).toBe('alive')
     expect(board.closest).toEqual({ lineIds: ['row-5'], needed: 5 })
   })

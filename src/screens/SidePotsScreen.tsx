@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
 import { bingoBoard, type BingoBoard, type PotStatus } from '../sidepots/bingo'
 import { threeSixNine, type ThreeSixNine } from '../sidepots/threeSixNine'
-import { bingoLooks, threeSixNineLooks, wonLinesText } from '../sidepots/looks'
+import { bingoLooks, threeSixNineLooks, wonLinesText, closestNeed } from '../sidepots/looks'
 import { frameMark } from '../sidepots/frameMark'
 import type { Game, Session } from '../types'
 import { Page, Card } from '../components/ui'
@@ -15,8 +15,8 @@ const TYPE_LABEL = { league: 'League', tournament: 'Tournament', practice: 'Prac
 const nightName = (s: Session) =>
   `${s.eventName ?? TYPE_LABEL[s.type]}, ${new Date(s.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
 
-// X or / for a frame that was a hit; nothing otherwise.
-function hitMark(games: Game[], gameIndex: number, frameIndex: number): string | undefined {
+// X or / for a frame that earned a mark; nothing otherwise.
+function markText(games: Game[], gameIndex: number, frameIndex: number): string | undefined {
   const mark = frameMark(games[gameIndex]?.frames[frameIndex])
   return mark === 'strike' ? 'X' : mark === 'spare' ? '/' : undefined
 }
@@ -47,13 +47,11 @@ function PotBanner({ state, detail }: { state: Outcome; detail: string }) {
 
 function bingoDetail(board: BingoBoard, state: Outcome): string {
   if (state === 'secured') return wonLinesText(board.wonLineIds)
-  if (state === 'lost') return 'Every line has an open frame.'
+  if (state === 'lost') return 'No line can be five strikes or five spares now.'
   if (state === 'not-won') return 'The night ended before a line was completed.'
   const open = board.lines.filter((l) => l.status === 'alive').length
-  const closest = board.closest
-  return closest && closest.needed < 5
-    ? `${open} of 12 lines open. The closest needs ${closest.needed} more.`
-    : `${open} of 12 lines open.`
+  const need = closestNeed(board)
+  return need ? `${open} of 12 lines open. The closest needs ${need}.` : `${open} of 12 lines open.`
 }
 
 function BingoSection({ games, live }: { games: Game[]; live: boolean }) {
@@ -72,12 +70,12 @@ function BingoSection({ games, live }: { games: Game[]; live: boolean }) {
             key={sq.index}
             look={looks[sq.index]}
             label={`G${sq.gameIndex + 1} F${sq.frameIndex + 1}`}
-            mark={hitMark(games, sq.gameIndex, sq.frameIndex)}
+            mark={markText(games, sq.gameIndex, sq.frameIndex)}
           />
         ))}
       </ul>
       <PotLegend />
-      <p className="text-xs text-muted">Strike or spare lights a square. Five in a row, column or diagonal secures the pot.</p>
+      <p className="text-xs text-muted">Five strikes or five spares in a row, column or diagonal secures the pot. A line holding one of each is dead.</p>
     </section>
   )
 }
@@ -105,7 +103,7 @@ function ThreeSixNineSection({ games, live }: { games: Game[]; live: boolean }) 
             key={sq.frameIndex}
             look={looks[i]}
             label={`G2 F${sq.frameIndex + 1}`}
-            mark={hitMark(games, sq.gameIndex, sq.frameIndex)}
+            mark={markText(games, sq.gameIndex, sq.frameIndex)}
           />
         ))}
       </ul>

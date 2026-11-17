@@ -16,16 +16,16 @@ const LOOK_CLASS: Record<SquareLook, string> = {
 
 // What a screen reader says for each look.
 const LOOK_WORDS: Record<SquareLook, string> = {
-  won: 'hit, on the winning line',
-  lit: 'hit',
-  dim: 'hit, but no line through it can win',
+  won: 'mark, on the winning line',
+  lit: 'mark',
+  dim: 'mark, but no line through it can win',
   miss: 'missed',
   closest: 'not bowled yet, on the closest line',
   target: 'not bowled yet, still worth hitting',
   idle: 'nothing to chase',
 }
 
-// The mark in the middle. Hits show the frame's own mark (X or /).
+// The mark in the middle: the frame's own X or /.
 function Mark({ look, mark }: { look: SquareLook; mark?: string }) {
   if (look === 'closest') return <span className="h-3 w-3 rounded-full bg-accent" />
   if (look === 'target') return <span className="h-3 w-3 rounded-full ring-1 ring-accent" />
@@ -56,11 +56,11 @@ export function PotSquare({ look, label, mark, className = '' }: {
 
 // The key under a board: the same shapes, small, with words.
 const LEGEND: { look: SquareLook; words: string }[] = [
-  { look: 'lit', words: 'Hit' },
+  { look: 'lit', words: 'Mark' },
   { look: 'closest', words: 'Closest line' },
   { look: 'target', words: 'Still alive' },
   { look: 'miss', words: 'Missed' },
-  { look: 'dim', words: 'Hit, line dead' },
+  { look: 'dim', words: 'Mark, line dead' },
 ]
 
 export function PotLegend() {

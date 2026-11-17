@@ -4,10 +4,11 @@ import type { ThreeSixNine } from './threeSixNine'
 // How a square is drawn. This sits between the pot logic and the screen:
 // the logic says what happened, this says what the bowler should see.
 //
-//   won     = a hit on a completed line
-//   lit     = a hit that can still help
-//   dim     = a hit that can no longer help
-//   miss    = the frame that broke a line (or killed 3-6-9)
+//   won     = a mark on a completed line
+//   lit     = a mark that can still help
+//   dim     = a mark that can no longer help: every line through it is dead,
+//             or the ones still alive are chasing the other kind
+//   miss    = the open frame that broke a line (or killed 3-6-9)
 //   closest = not bowled yet, on the line nearest to winning
 //   target  = not bowled yet, on some line that can still win
 //   idle    = nothing to chase here
@@ -27,8 +28,8 @@ export function bingoLooks(board: BingoBoard, live: boolean): SquareLook[] {
   const chasing = live && board.status === 'alive'
 
   return board.squares.map((sq) => {
-    if (sq.result === 'miss') return 'miss'
-    if (sq.result === 'hit') {
+    if (sq.mark === 'open') return 'miss'
+    if (sq.mark !== 'pending') {
       if (won.has(sq.index)) return 'won'
       return sq.display === 'lit' ? 'lit' : 'dim'
     }
@@ -52,6 +53,21 @@ export function threeSixNineLooks(pot: ThreeSixNine, live: boolean): SquareLook[
     nextFound = true
     return 'closest'
   })
+}
+
+// "2 more strikes" for the line closest to winning, or null when nothing is
+// close enough to be worth naming. Lines tied for closest can be chasing
+// different kinds, and then neither word fits.
+export function closestNeed(board: BingoBoard): string | null {
+  const closest = board.closest
+  if (!closest || closest.needed >= 5) return null
+
+  const kinds = new Set(
+    board.lines.filter((l) => closest.lineIds.includes(l.id)).flatMap((l) => l.kinds)
+  )
+  const kind = kinds.size === 1 ? [...kinds][0] : null
+  const noun = kind === null ? 'marks of one kind' : closest.needed === 1 ? kind.slice(0, -1) : kind
+  return `${closest.needed} more ${noun}`
 }
 
 export function lineLabel(lineId: string): string {

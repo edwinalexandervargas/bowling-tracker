@@ -209,3 +209,9 @@
 - Alternatives: app open signed out with sign-in optional for backup (the original offline-first rule); gated by default with a "continue without an account" escape hatch.
 - Why: one mental model, and every screen can assume there is a user. A build with no Supabase keys stays open, since gating one would leave an app nobody can get into.
 - Risk: an expired session with no usable signal at the alley leaves my nights on the device but unreachable, because Supabase refreshes sessions over the network.
+
+## Bingo lines must be all strikes or all spares
+- Decision: a row, column or diagonal wins only if its five frames are the same mark. A line holding one of each is dead, the same as one holding an open frame.
+- Alternatives: any five marks win (what was built first); only frames bowled back to back count, which would leave columns and diagonals unwinnable.
+- Why: it matches how the pot is actually run, and it makes a spare in the middle of a strike line a real cost instead of a free pass.
+- Note: a board can now be lost with no open frame on it.

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { bingoBoard } from './bingo'
 import { threeSixNine } from './threeSixNine'
-import { bingoLooks, threeSixNineLooks, lineLabel, wonLinesText } from './looks'
+import { bingoLooks, threeSixNineLooks, lineLabel, wonLinesText, closestNeed } from './looks'
 import { game } from './fixtures'
 
 const allStrikes = 'X X X X X X X X X X'
@@ -11,7 +11,7 @@ describe('bingoLooks: live night', () => {
     expect(bingoLooks(bingoBoard([]), true)).toEqual(Array(25).fill('target'))
   })
 
-  it('once a line has a hit, its unbowled squares become the closest ones', () => {
+  it('once a line has a mark, its unbowled squares become the closest ones', () => {
     // Three strikes: row 1 needs 2 more and is the only closest line.
     const looks = bingoLooks(bingoBoard([game('X X X')]), true)
     expect(looks.slice(0, 5)).toEqual(['lit', 'lit', 'lit', 'closest', 'closest'])
@@ -27,7 +27,7 @@ describe('bingoLooks: live night', () => {
     expect(looks[7]).toBe('target')     // on none of them
   })
 
-  it('an open frame is a miss; a hit with no line left is dim', () => {
+  it('an open frame is a miss; a mark with no line left is dim', () => {
     const looks = bingoLooks(bingoBoard([game('- X X X X X -')]), true)
     expect(looks[0]).toBe('miss')
     expect(looks[1]).toBe('dim')
@@ -42,12 +42,12 @@ describe('bingoLooks: live night', () => {
 
 describe('bingoLooks: secured and lost', () => {
   it('squares on a won line are marked won, and nothing is chased afterwards', () => {
-    const looks = bingoLooks(bingoBoard([game('X X / / X')]), true)
+    const looks = bingoLooks(bingoBoard([game('X X X X X')]), true)
     expect(looks.slice(0, 5)).toEqual(Array(5).fill('won'))
     expect(looks.slice(5)).toEqual(Array(20).fill('idle'))
   })
 
-  it('hits off the winning line stay lit or dim, not won', () => {
+  it('marks off the winning line stay lit or dim, not won', () => {
     // Row 2 is won; square 1 (row 1 dead by the open in frame 1, column 2 alive) is lit.
     const looks = bingoLooks(bingoBoard([game('- X X X X X X X X X')]), true)
     expect(looks[0]).toBe('miss')
@@ -55,7 +55,7 @@ describe('bingoLooks: secured and lost', () => {
     expect(looks.slice(5, 10)).toEqual(Array(5).fill('won'))
   })
 
-  it('a lost board has only misses, dim hits and idle squares', () => {
+  it('a lost board has only misses, dim marks and idle squares', () => {
     const lost = bingoBoard([
       game('- - X X X X X - X X'),
       game('X X X - X X X X X -'),
@@ -111,5 +111,30 @@ describe('wonLinesText', () => {
 
   it('counts them once there are more than two', () => {
     expect(wonLinesText(['row-1', 'row-2', 'col-1'])).toBe('3 lines complete.')
+  })
+})
+
+describe('closestNeed', () => {
+  it('names the kind the closest line is chasing', () => {
+    expect(closestNeed(bingoBoard([game('X X X')]))).toBe('2 more strikes')
+    expect(closestNeed(bingoBoard([game('/ / / /')]))).toBe('1 more spare')
+  })
+
+  it('says nothing while every line still needs all five', () => {
+    expect(closestNeed(bingoBoard([]))).toBeNull()
+  })
+
+  it('falls back to neutral words when the closest lines are chasing different kinds', () => {
+    // Row 1 is dead; column 1 chases spares and column 2 strikes, both needing 4.
+    expect(closestNeed(bingoBoard([game('/ X')]))).toBe('4 more marks of one kind')
+  })
+
+  it('is null once no line is alive', () => {
+    const lost = bingoBoard([
+      game('- - X X X X X - X X'),
+      game('X X X - X X X X X -'),
+      game('-'),
+    ])
+    expect(closestNeed(lost)).toBeNull()
   })
 })
