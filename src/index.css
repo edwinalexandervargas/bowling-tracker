@@ -18,6 +18,7 @@
   --color-accent-strong: #f2c56b; /* maple, hovered */
   --color-on-accent: #1b1406;     /* text on maple */
   --color-danger: #f0787c;        /* misses, errors, splits */
+  --color-win: #5fd39b;           /* a completed side-pot line */
 
   /* One variable font, bundled with the app so it works with no signal. */
   --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;

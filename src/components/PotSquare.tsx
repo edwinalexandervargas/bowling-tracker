@@ -5,7 +5,7 @@ import type { SquareLook } from '../sidepots/looks'
 // Outlines are borders, not Tailwind rings: rings are drawn with box-shadow,
 // and the glow needs box-shadow to itself.
 const LOOK_CLASS: Record<SquareLook, string> = {
-  won: 'bg-accent text-on-accent ring-2 ring-ink ring-offset-2 ring-offset-page',
+  won: 'bg-accent text-on-accent ring-2 ring-win ring-offset-2 ring-offset-page',
   lit: 'bg-accent text-on-accent',
   dim: 'border border-line text-muted',
   miss: 'border border-danger bg-surface text-danger',
@@ -56,6 +56,7 @@ export function PotSquare({ look, label, mark, className = '' }: {
 
 // The key under a board: the same shapes, small, with words.
 const LEGEND: { look: SquareLook; words: string }[] = [
+  { look: 'won', words: 'Complete line' },
   { look: 'lit', words: 'Mark' },
   { look: 'closest', words: 'Closest line' },
   { look: 'target', words: 'Still alive' },
