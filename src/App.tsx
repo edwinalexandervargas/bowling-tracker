@@ -4,6 +4,8 @@ import { useAuthStore } from './auth/authStore'
 import { supabaseConfigured } from './lib/supabaseConfig'
 import { startSync } from './sync/sync'
 import { LoginScreen } from './screens/LoginScreen'
+import { AppError } from './components/AppError'
+import { CheckingSignIn } from './components/CheckingSignIn'
 import { BottomNav } from './components/BottomNav'
 import { Sidebar } from './components/Sidebar'
 import { SidePotsScreen } from './screens/SidePotsScreen'
@@ -38,9 +40,9 @@ function RequireAuth() {
   const loading = useAuthStore((s) => s.loading)
   const location = useLocation()
 
-  // Still reading the saved sign-in. Render nothing rather than flashing the
-  // Sign in screen and throwing away where the person was heading.
-  if (loading) return null
+  // Still reading the saved sign-in: don't flash the Sign in screen or throw
+  // away where the person was heading, but don't show a blank page either.
+  if (loading) return <CheckingSignIn />
   if (!session && supabaseConfigured) return <Navigate to="/login" replace state={{ from: location.pathname }} />
   return <Outlet />
 }
@@ -92,7 +94,11 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AppError>
+      <RouterProvider router={router} />
+    </AppError>
+  )
 }
 
 export default App

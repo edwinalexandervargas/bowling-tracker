@@ -5,6 +5,7 @@ import { supabaseConfigured, supabaseProblem } from '../lib/supabaseConfig'
 type AuthState = {
   session: Session | null
   loading: boolean           // true until the saved session has been checked
+  problem: string | null     // why the check failed, if it did
   init: () => () => void     // returns an unsubscribe for useEffect cleanup
   signIn: (email: string, password: string) => Promise<string | null>   // error message or null
   signUp: (email: string, password: string) => Promise<string | null>
@@ -19,6 +20,7 @@ const loadSupabase = () => import('../lib/supabase').then((m) => m.supabase)
 export const useAuthStore = create<AuthState>()((set) => ({
   session: null,
   loading: true,
+  problem: null,
 
   init: () => {
     if (!supabaseConfigured) {
@@ -27,12 +29,21 @@ export const useAuthStore = create<AuthState>()((set) => ({
     }
     let cancelled = false
     let unsubscribe = () => {}
-    loadSupabase().then((supabase) => {
-      if (cancelled) return
-      supabase.auth.getSession().then(({ data }) => set({ session: data.session, loading: false }))
-      const { data } = supabase.auth.onAuthStateChange((_event, session) => set({ session, loading: false }))
-      unsubscribe = () => data.subscription.unsubscribe()
-    })
+    loadSupabase()
+      .then(async (supabase) => {
+        if (cancelled) return
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => set({ session, loading: false }))
+        unsubscribe = () => data.subscription.unsubscribe()
+        const { data: current } = await supabase.auth.getSession()
+        set({ session: current.session, loading: false })
+      })
+      // Never leave `loading` true: the app shows nothing while it is, and a
+      // failed chunk fetch or a blocked request would hang there for good.
+      .catch((error: unknown) => {
+        if (cancelled) return
+        console.error('Sign-in check failed:', error)
+        set({ loading: false, problem: "Couldn't reach the sign-in service. Your scores are still on this device." })
+      })
     return () => {
       cancelled = true
       unsubscribe()

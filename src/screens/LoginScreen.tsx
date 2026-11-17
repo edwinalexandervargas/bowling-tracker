@@ -12,6 +12,7 @@ type Mode = 'signin' | 'signup'
 export function LoginScreen() {
   const location = useLocation()
   const session = useAuthStore((s) => s.session)
+  const problem = useAuthStore((s) => s.problem)
   const signIn = useAuthStore((s) => s.signIn)
   const signUp = useAuthStore((s) => s.signUp)
   const [mode, setMode] = useState<Mode>('signin')
@@ -61,9 +62,9 @@ export function LoginScreen() {
           </p>
         </div>
 
-        {supabaseProblem && (
+        {(supabaseProblem ?? problem) && (
           <Card className="p-4 text-sm text-accent">
-            <p role="alert">{supabaseProblem}</p>
+            <p role="alert">{supabaseProblem ?? problem}</p>
           </Card>
         )}
 
