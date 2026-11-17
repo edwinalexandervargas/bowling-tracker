@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router'
+import { NavLink, useNavigate } from 'react-router'
 import { useAuthStore } from '../auth/authStore'
 import { useSyncStore } from '../sync/syncStore'
 import { syncSummary } from '../sync/summary'
@@ -37,6 +37,7 @@ export function AccountBlock({ onNavigate, rowClass = navRowClass }: {
 }) {
   const session = useAuthStore((s) => s.session)
   const signOut = useAuthStore((s) => s.signOut)
+  const navigate = useNavigate()
 
   if (!session) {
     return (
@@ -57,6 +58,8 @@ export function AccountBlock({ onNavigate, rowClass = navRowClass }: {
         type="button"
         onClick={() => {
           onNavigate?.()
+          // Back to the Overview straight away; it doesn't wait for the network
+          navigate('/')
           void signOut()
         }}
         className={`${rowClass(false)} w-full`}
