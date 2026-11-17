@@ -22,7 +22,30 @@ if (fromEmailLink) {
 }
 
 // The Supabase library is loaded on demand, so the first screen never waits for it.
-const loadSupabase = () => import('../lib/supabase').then((m) => m.supabase)
+// After a redeploy, a tab that still holds the old page asks for a chunk that no longer
+// exists. Reload once to pick up the new build; the flag stops it from looping.
+const loadSupabase = () =>
+  import('../lib/supabase')
+    .then((m) => {
+      try {
+        sessionStorage.removeItem('chunk-reloaded')
+      } catch {
+        /* storage unavailable */
+      }
+      return m.supabase
+    })
+    .catch((err) => {
+      try {
+        if (!sessionStorage.getItem('chunk-reloaded')) {
+          sessionStorage.setItem('chunk-reloaded', '1')
+          window.location.reload()
+          return new Promise<never>(() => {})
+        }
+      } catch {
+        /* storage unavailable: fall through to the error */
+      }
+      throw err
+    })
 
 // Not persisted here: Supabase keeps the session in localStorage itself,
 // so a signed-in user stays signed in at the alley with no signal.
