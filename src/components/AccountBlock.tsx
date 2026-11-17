@@ -30,7 +30,8 @@ function SyncRow({ rowClass }: { rowClass: (active: boolean) => string }) {
 }
 
 // Sign in / sign out, shown at the bottom of the sidebar and the menu drawer.
-// The app works signed out, so this is an option, never a gate.
+// Reaching this signed out only happens in a build with no Supabase keys,
+// where the app is not gated; everywhere else the nav is behind a sign-in.
 export function AccountBlock({ onNavigate, rowClass = navRowClass }: {
   onNavigate?: () => void
   rowClass?: (active: boolean) => string

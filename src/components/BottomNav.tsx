@@ -19,7 +19,7 @@ export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const { pathname } = useLocation()
-  const onMenuRoute = pathname === '/login' || moreLinks.some((l) => pathname.startsWith(l.to))
+  const onMenuRoute = moreLinks.some((l) => pathname.startsWith(l.to))
 
   const closeMenu = () => {
     setMenuOpen(false)
