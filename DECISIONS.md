@@ -203,3 +203,9 @@
 - Decision: tapping a ball opens the Add ball form filled in; tapping a pattern loads it into the form on the Patterns screen. Both get Save changes and a Delete with a confirm step. A ball model's details (brand, name, RG, differential) are shared by every copy of that ball.
 - Alternatives: edit in place on the card (fast, but cramped on a phone and a second form to keep in step); edit in a bottom sheet (focused, but the most new UI and focus handling).
 - Why: one form per thing means add and edit can't drift apart, and it was the smallest change.
+
+## Sign-in required for the whole app
+- Decision: signed out, the only reachable screen is Sign in. No navigation, no local-only use. A route guard waits for the saved-session check, then redirects, handing the attempted path back so a deep link survives signing in.
+- Alternatives: app open signed out with sign-in optional for backup (the original offline-first rule); gated by default with a "continue without an account" escape hatch.
+- Why: one mental model, and every screen can assume there is a user. A build with no Supabase keys stays open, since gating one would leave an app nobody can get into.
+- Risk: an expired session with no usable signal at the alley leaves my nights on the device but unreachable, because Supabase refreshes sessions over the network.
