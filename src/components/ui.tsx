@@ -67,8 +67,10 @@ export function Segmented<T extends string>({
 export function Chips<T extends string | null>({
   options, value, onChange, label,
 }: { options: { key: T; label: string }[]; value: T; onChange: (v: T) => void; label: string }) {
+  // py-1: a sideways-scrolling row clips what sticks out of it, and the pill
+  // outlines are drawn 1px outside the pill, so they need that room.
   return (
-    <div aria-label={label} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
+    <div aria-label={label} className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 [scrollbar-width:none]">
       {options.map((o) => (
         <button key={o.key ?? 'none'} type="button" aria-pressed={o.key === value} onClick={() => onChange(o.key)}
           className={`min-h-tap shrink-0 rounded-full px-4 text-sm font-medium transition ${

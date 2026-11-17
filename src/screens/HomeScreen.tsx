@@ -24,16 +24,20 @@ export function HomeScreen() {
 
   const inPeriod = useMemo(() => sessionsInPeriod(sessions, period), [sessions, period])
   const leagues = useMemo(() => byLeague(inPeriod), [inPeriod])
-  // null = house shot overview; otherwise a leagueKey
-  const [league, setLeague] = useState<string | null>(null)
+  // The league pill that was tapped, if any
+  const [pickedLeague, setPickedLeague] = useState<string | null>(null)
+  // The league on show: the one tapped, else the league with the most games.
+  // null only when there are no league nights at all.
+  const league = leagues.some((l) => l.key === pickedLeague) ? pickedLeague : (leagues[0]?.key ?? null)
   // Which league card is dropped open in the Leagues list (none to start)
   const [openLeague, setOpenLeague] = useState<string | null>(null)
   const selected = useMemo(
     () =>
+      // With no leagues yet, the numbers cover everything bowled in the period
       league === null
-        ? houseShotSessions(inPeriod, patterns)
+        ? inPeriod
         : inPeriod.filter((s) => s.type === 'league' && leagueKey(s.eventName) === league),
-    [inPeriod, league, patterns],
+    [inPeriod, league],
   )
   const summary = useMemo(() => summarize(selected), [selected])
   // Per-pattern breakdown for leagues bowled on any sport pattern (e.g. Brunswick's rotation)
@@ -80,8 +84,8 @@ export function HomeScreen() {
         <Chips
           label="League"
           value={league}
-          onChange={setLeague}
-          options={[{ key: null, label: 'House shot' }, ...leagues.map((l) => ({ key: l.key as string | null, label: l.label }))]}
+          onChange={setPickedLeague}
+          options={leagues.map((l) => ({ key: l.key, label: l.label }))}
         />
       )}
 
@@ -97,7 +101,7 @@ export function HomeScreen() {
       ) : (
         <>
           <section className="rounded-2xl bg-surface p-5 ring-1 ring-line">
-            <p className="text-sm font-medium text-muted">{leagueLabel ? `${leagueLabel} average` : 'House shot average'}</p>
+            <p className="text-sm font-medium text-muted">{leagueLabel ? `${leagueLabel} average` : 'Average'}</p>
             <div className="flex items-baseline gap-2">
               <span className="num text-7xl font-semibold text-accent">{score.average}</span>
               <span className="text-sm text-muted">{count(score.games, 'game')}</span>
