@@ -5,7 +5,7 @@ import type { SquareLook } from '../sidepots/looks'
 // Outlines are borders, not Tailwind rings: rings are drawn with box-shadow,
 // and the glow needs box-shadow to itself.
 const LOOK_CLASS: Record<SquareLook, string> = {
-  won: 'bg-accent text-on-accent ring-2 ring-win ring-offset-2 ring-offset-page',
+  won: 'bg-win text-on-win ring-2 ring-win ring-offset-2 ring-offset-page',
   lit: 'bg-accent text-on-accent',
   dim: 'border border-line text-muted',
   miss: 'border border-danger bg-surface text-danger',
@@ -44,7 +44,7 @@ export function PotSquare({ look, label, mark, className = '' }: {
   return (
     <li className={`relative flex aspect-square flex-col items-center justify-center rounded-lg ${LOOK_CLASS[look]} ${className}`}>
       <span className="sr-only">{label}: {LOOK_WORDS[look]}</span>
-      <span aria-hidden="true" className={`absolute top-1 text-[11px] leading-none ${filled ? 'text-on-accent/75' : 'text-muted'}`}>
+      <span aria-hidden="true" className={`absolute top-1 text-[11px] leading-none ${look === 'won' ? 'text-on-win/75' : filled ? 'text-on-accent/75' : 'text-muted'}`}>
         {label}
       </span>
       <span aria-hidden="true" className="mt-3 flex h-6 items-center">
