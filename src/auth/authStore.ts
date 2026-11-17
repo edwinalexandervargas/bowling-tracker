@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 import { supabaseConfigured, supabaseProblem } from '../lib/supabaseConfig'
+import { authUrlError } from './authUrlError'
 
 type AuthState = {
   session: Session | null
@@ -12,6 +13,14 @@ type AuthState = {
   signOut: () => Promise<void>
 }
 
+// Read at module load: an email link that failed comes back with the reason in
+// the URL, and the Supabase client wipes the URL as soon as it is created.
+const fromEmailLink = authUrlError(window.location.search, window.location.hash)
+if (fromEmailLink) {
+  // Don't let the error survive a refresh, or stick to a link they share.
+  window.history.replaceState(null, '', window.location.pathname)
+}
+
 // The Supabase library is loaded on demand, so the first screen never waits for it.
 const loadSupabase = () => import('../lib/supabase').then((m) => m.supabase)
 
@@ -20,7 +29,7 @@ const loadSupabase = () => import('../lib/supabase').then((m) => m.supabase)
 export const useAuthStore = create<AuthState>()((set) => ({
   session: null,
   loading: true,
-  problem: null,
+  problem: fromEmailLink,
 
   init: () => {
     if (!supabaseConfigured) {
@@ -42,7 +51,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       .catch((error: unknown) => {
         if (cancelled) return
         console.error('Sign-in check failed:', error)
-        set({ loading: false, problem: "Couldn't reach the sign-in service. Your scores are still on this device." })
+        set({ loading: false, problem: fromEmailLink ?? "Couldn't reach the sign-in service. Your scores are still on this device." })
       })
     return () => {
       cancelled = true
