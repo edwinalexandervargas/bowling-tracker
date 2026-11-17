@@ -58,9 +58,9 @@ export function AccountBlock({ onNavigate, rowClass = navRowClass }: {
         type="button"
         onClick={() => {
           onNavigate?.()
-          // Back to the Overview straight away; it doesn't wait for the network
-          navigate('/')
-          void signOut()
+          // Go to the Sign in screen once the session is actually gone. That screen
+          // sends signed-in users home, so going there first would bounce straight back.
+          void signOut().then(() => navigate('/login'))
         }}
         className={`${rowClass(false)} w-full`}
       >

@@ -59,5 +59,9 @@ export const useAuthStore = create<AuthState>()((set) => ({
     if (!supabaseConfigured) return
     const supabase = await loadSupabase()
     await supabase.auth.signOut()
+    // Read back what Supabase now holds, so the store is up to date by the time
+    // this resolves (callers navigate straight after).
+    const { data } = await supabase.auth.getSession()
+    set({ session: data.session })
   },
 }))
