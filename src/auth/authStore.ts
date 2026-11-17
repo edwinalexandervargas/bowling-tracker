@@ -69,7 +69,11 @@ export const useAuthStore = create<AuthState>()((set) => ({
   signUp: async (email, password) => {
     if (!supabaseConfigured) return supabaseProblem
     const supabase = await loadSupabase()
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    })
     if (error) return error.message
     // With email confirmation on, there's no session until the link is clicked.
     return data.session ? null : 'Check your email to confirm your account, then sign in.'
