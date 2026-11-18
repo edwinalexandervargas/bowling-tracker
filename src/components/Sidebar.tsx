@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router'
 import { primaryLinks, moreLinks, type NavItem } from './navLinks'
 import { Icon } from './Icon'
-import { PinRack } from './ui'
+import { KingpinMark } from './ui'
 import { AccountBlock } from './AccountBlock'
 import { navRowClass } from './styles'
 
@@ -32,9 +32,9 @@ export function Sidebar() {
       aria-label="Main"
       className="sticky top-0 hidden h-dvh w-20 shrink-0 flex-col gap-5 overflow-y-auto border-r border-line bg-surface px-2 py-4 pl-[max(0.5rem,env(safe-area-inset-left))] md:flex lg:w-60 lg:px-3 short:flex short:gap-2 short:py-2"
     >
-      <div className="flex items-center gap-2 px-3 text-accent max-lg:justify-center max-lg:px-0 short:hidden">
-        <PinRack className="h-7 w-7" />
-        <span className="display text-base text-ink max-lg:hidden">Bowling Tracker</span>
+      <div className="flex items-center gap-2.5 px-3 text-ink max-lg:justify-center max-lg:px-0 short:hidden">
+        <KingpinMark className="h-7 w-8" />
+        <span className="display text-base max-lg:hidden">Kingpin</span>
       </div>
       <Group title="League night" links={primaryLinks} />
       <Group title="More" links={moreLinks} />

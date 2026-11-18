@@ -108,3 +108,23 @@ export function PinRack({ className = 'h-10 w-10' }: { className?: string }) {
     </svg>
   )
 }
+
+// The Kingpin logo: the ten-pin rack from above, with the 5 pin (the kingpin)
+// in the accent color. Pins take the text color, so set it with text-*.
+export function KingpinMark({ className = 'h-10 w-11', ring = false }: { className?: string; ring?: boolean }) {
+  const pins: [number, number, number][] = [
+    [17, 12, 0.35], [39, 12, 0.35], [61, 12, 0.35], [83, 12, 0.35],
+    [28, 35, 0.6], [72, 35, 0.6],
+    [39, 58, 0.8], [61, 58, 0.8],
+    [50, 81, 1],
+  ]
+  return (
+    <svg aria-hidden="true" viewBox="0 0 100 90" className={className}>
+      {pins.map(([cx, cy, o]) => (
+        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="7.5" fill="currentColor" opacity={o} />
+      ))}
+      {ring && <circle cx="50" cy="35" r="10.5" fill="none" stroke="var(--color-accent)" strokeWidth="1.6" />}
+      <circle cx="50" cy="35" r={ring ? 7.5 : 8.5} fill="var(--color-accent)" />
+    </svg>
+  )
+}

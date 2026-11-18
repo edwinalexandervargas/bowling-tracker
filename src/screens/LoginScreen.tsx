@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuthStore } from '../auth/authStore'
 import { validateCredentials, type CredentialErrors } from '../auth/validateCredentials'
 import { supabaseConfigured, supabaseProblem } from '../lib/supabaseConfig'
-import { Card, PinRack, Segmented } from '../components/ui'
+import { Card, KingpinMark, Segmented } from '../components/ui'
 import { Icon } from '../components/Icon'
 import { inputClass, primaryButton, secondaryButton } from '../components/styles'
 import { useGuestStore } from '../guest/guestStore'
@@ -77,8 +77,9 @@ export function LoginScreen() {
       )}
       <div className="mx-auto my-auto w-full max-w-md space-y-6 py-6">
         <div className="text-center">
-          <PinRack className="mx-auto h-12 w-12 text-accent" />
-          <h1 className="display mt-3 text-2xl">{mode === 'signin' ? 'Sign in' : 'Create an account'}</h1>
+          <KingpinMark ring className="mx-auto h-16 w-[4.5rem] text-ink" />
+          <p className="display mt-3 text-xs tracking-[0.2em] text-accent uppercase">Kingpin</p>
+          <h1 className="display mt-2 text-2xl">{mode === 'signin' ? 'Sign in' : 'Create an account'}</h1>
           <p className="mt-1 text-sm text-muted">
             {supabaseConfigured
               ? 'Scores are saved on this device and backed up to your account, so they are there on every device you sign in on.'

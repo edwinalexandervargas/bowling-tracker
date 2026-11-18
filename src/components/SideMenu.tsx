@@ -3,6 +3,7 @@ import { NavLink } from 'react-router'
 import { moreLinks } from './navLinks'
 import { Icon } from './Icon'
 import { AccountBlock } from './AccountBlock'
+import { KingpinMark } from './ui'
 import { navRowClass } from './styles'
 
 type Props = {
@@ -51,7 +52,10 @@ export function SideMenu({ open, onClose }: Props) {
         }`}
       >
         <div className="mb-3 flex items-center justify-between">
-          <span className="display text-lg">Menu</span>
+          <span className="flex items-center gap-2.5">
+            <KingpinMark className="h-6 w-7" />
+            <span className="display text-lg">Kingpin</span>
+          </span>
           <button
             type="button"
             onClick={onClose}
