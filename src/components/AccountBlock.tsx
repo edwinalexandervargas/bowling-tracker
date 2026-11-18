@@ -4,6 +4,8 @@ import { useSyncStore } from '../sync/syncStore'
 import { syncSummary } from '../sync/summary'
 import { pendingCount } from '../sync/tracker'
 import { syncNow } from '../sync/sync'
+import { useGuestStore } from '../guest/guestStore'
+import { leaveGuest } from '../guest/guest'
 import { Icon } from './Icon'
 import { navRowClass } from './styles'
 
@@ -30,15 +32,39 @@ function SyncRow({ rowClass }: { rowClass: (active: boolean) => string }) {
 }
 
 // Sign in / sign out, shown at the bottom of the sidebar and the menu drawer.
-// Reaching this signed out only happens in a build with no Supabase keys,
-// where the app is not gated; everywhere else the nav is behind a sign-in.
+// Reaching this signed out happens in guest mode, and in a build with no
+// Supabase keys, where the app is not gated; otherwise the nav is behind a sign-in.
 export function AccountBlock({ onNavigate, rowClass = navRowClass }: {
   onNavigate?: () => void
   rowClass?: (active: boolean) => string
 }) {
   const session = useAuthStore((s) => s.session)
   const signOut = useAuthStore((s) => s.signOut)
+  const guest = useGuestStore((s) => s.active)
   const navigate = useNavigate()
+
+  // A guest can sign up, or end the demo, which throws away what they did.
+  if (guest) {
+    return (
+      <div>
+        <NavLink to="/login" state={{ mode: 'signup' }} onClick={onNavigate} className={({ isActive }) => rowClass(isActive)}>
+          <Icon name="signin" />
+          <span>Sign up</span>
+        </NavLink>
+        <button
+          type="button"
+          onClick={() => {
+            onNavigate?.()
+            void leaveGuest().then(() => navigate('/login'))
+          }}
+          className={`${rowClass(false)} w-full`}
+        >
+          <Icon name="signin" className="h-5 w-5 rotate-180" />
+          <span>Leave guest mode</span>
+        </button>
+      </div>
+    )
+  }
 
   if (!session) {
     return (

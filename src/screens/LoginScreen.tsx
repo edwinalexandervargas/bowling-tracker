@@ -1,21 +1,32 @@
-import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useLocation } from 'react-router'
+import { useMemo, useState, type FormEvent } from 'react'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuthStore } from '../auth/authStore'
 import { validateCredentials, type CredentialErrors } from '../auth/validateCredentials'
 import { supabaseConfigured, supabaseProblem } from '../lib/supabaseConfig'
 import { Card, PinRack, Segmented } from '../components/ui'
 import { Icon } from '../components/Icon'
-import { inputClass, primaryButton } from '../components/styles'
+import { inputClass, primaryButton, secondaryButton } from '../components/styles'
+import { useGuestStore } from '../guest/guestStore'
+import { enterGuest, guestNightsToKeep, saveCarry, clearCarry } from '../guest/guest'
+import { useGameStore } from '../store/gameStore'
+import { count } from '../format'
 
 type Mode = 'signin' | 'signup'
 
 export function LoginScreen() {
   const location = useLocation()
+  const navigate = useNavigate()
+  // The guest banner and sign-up prompt link here asking for Sign up.
+  const asked = location.state as { from?: string; mode?: Mode } | null
   const session = useAuthStore((s) => s.session)
   const problem = useAuthStore((s) => s.problem)
   const signIn = useAuthStore((s) => s.signIn)
   const signUp = useAuthStore((s) => s.signUp)
-  const [mode, setMode] = useState<Mode>('signin')
+  const [mode, setMode] = useState<Mode>(asked?.mode === 'signup' ? 'signup' : 'signin')
+  const guest = useGuestStore((s) => s.active)
+  const sessions = useGameStore((s) => s.sessions)
+  const keepable = useMemo(() => (guest ? guestNightsToKeep(sessions) : []), [guest, sessions])
+  const [keep, setKeep] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errors, setErrors] = useState<CredentialErrors>({})
@@ -28,6 +39,13 @@ export function LoginScreen() {
     const found = validateCredentials({ email, password })
     setErrors(found)
     if (Object.keys(found).length) return
+    // A guest's kept games wait on the device until this account's first
+    // sign-in here, which, with email confirmation, may be after clicking a link.
+    // Only a guest changes them, so signing in later never throws them away.
+    if (guest) {
+      if (keepable.length > 0 && keep) saveCarry(keepable)
+      else clearCarry()
+    }
     setBusy(true)
     const result = mode === 'signin' ? await signIn(email, password) : await signUp(email, password)
     setBusy(false)
@@ -36,7 +54,7 @@ export function LoginScreen() {
 
   // Already signed in (or just finished): carry on to wherever they were headed.
   // RequireAuth puts that path in the location state when it sends someone here.
-  const sentFrom = (location.state as { from?: string } | null)?.from
+  const sentFrom = asked?.from
   const from = sentFrom?.startsWith('/') && sentFrom !== '/login' ? sentFrom : '/'
   if (session) return <Navigate to={from} replace />
 
@@ -44,8 +62,14 @@ export function LoginScreen() {
   // own page padding and a way back into the app, which works signed out.
   return (
     <div className="flex min-h-dvh flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))]">
+      {guest && (
+        <Link to="/" className="-ml-2 inline-flex min-h-tap w-fit items-center gap-1 px-2 text-sm font-medium text-accent">
+          <Icon name="back" className="h-4 w-4" />
+          Back to the demo
+        </Link>
+      )}
       {/* Only a build without Supabase keys can use the app signed out. */}
-      {!supabaseConfigured && (
+      {!supabaseConfigured && !guest && (
         <Link to="/" className="-ml-2 inline-flex min-h-tap w-fit items-center gap-1 px-2 text-sm font-medium text-accent">
           <Icon name="back" className="h-4 w-4" />
           Back to the app
@@ -85,12 +109,29 @@ export function LoginScreen() {
             {errors.password && <span className="text-xs text-danger">{errors.password}</span>}
           </label>
 
+          {keepable.length > 0 && (
+            <label className="flex min-h-tap items-center gap-3 text-sm">
+              <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} className="h-5 w-5 accent-accent" />
+              <span>Keep the {count(keepable.length, 'night')} you bowled as a guest</span>
+            </label>
+          )}
+
           {message && <p role="status" className="rounded-lg bg-raised p-3 text-sm ring-1 ring-line">{message}</p>}
 
           <button type="submit" disabled={busy || !supabaseConfigured} className={`${primaryButton} w-full`}>
             {busy ? 'Working…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
+
+        {/* Try it with no account: everything works for the visit, nothing is saved. */}
+        {supabaseConfigured && !guest && (
+          <div className="space-y-2 border-t border-line pt-6 text-center">
+            <button type="button" onClick={() => { enterGuest(); navigate('/') }} className={`${secondaryButton} w-full`}>
+              Try as guest
+            </button>
+            <p className="text-xs text-muted">Score games and run side pots with no account. Nothing is saved.</p>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { useGameStore } from '../store/gameStore'
+import { blockedForGuest } from '../guest/guestStore'
 import { leagueSeasons, leagueKey, summarize, byPattern, houseShotSessions, nights } from '../stats/slices'
 import { pct, fmtPct } from '../stats/stats'
 import { TrendChart } from '../components/TrendChart'
@@ -123,7 +124,7 @@ export function LeagueScreen() {
           <div className="max-w-md space-y-3 rounded-xl bg-surface p-4 ring-1 ring-line">
             <p className="text-sm">Close this season? Nights after today start a new season. You can undo this.</p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { closeSeason(key); setConfirming(false) }}
+              <button type="button" onClick={() => { if (blockedForGuest()) return; closeSeason(key); setConfirming(false) }}
                 className={`${primaryButton} flex-1`}>Close season</button>
               <button type="button" onClick={() => setConfirming(false)}
                 className={`${secondaryButton} flex-1`}>Cancel</button>
@@ -138,7 +139,7 @@ export function LeagueScreen() {
       )}
 
       {season.id === seasons[1]?.id && (
-        <button type="button" onClick={() => { undoCloseSeason(key); setSeasonId('current') }}
+        <button type="button" onClick={() => { if (blockedForGuest()) return; undoCloseSeason(key); setSeasonId('current') }}
           className={quietTextButton}>
           Reopen this season
         </button>

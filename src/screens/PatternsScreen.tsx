@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { blockedForGuest } from '../guest/guestStore'
 import {
   validatePatternDraft,
   patternToDraft,
@@ -65,6 +66,7 @@ export function PatternsScreen() {
     e.preventDefault()
     const result = validatePatternDraft(draft)
     if (!result.ok) return setErrors(result.errors)
+    if (blockedForGuest()) return // the form stays filled in behind the prompt
 
     if (editing) updatePattern({ id: editing.id, ...result.value })
     else addPattern({ id: crypto.randomUUID(), ...result.value })
@@ -127,6 +129,7 @@ export function PatternsScreen() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (blockedForGuest()) return
                       removePattern(editing.id)
                       startAdding()
                     }}

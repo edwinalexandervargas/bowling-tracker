@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore'
 import { useAuthStore } from '../auth/authStore'
 import { supabaseConfigured } from '../lib/supabaseConfig'
+import { guestHoldsStore } from '../guest/guestStore'
 import { useSyncStore } from './syncStore'
 import { syncOnce, type LocalStore, type StateStore } from './engine'
 import { trackChanges } from './tracker'
@@ -52,7 +53,8 @@ function schedule(delay = DEBOUNCE_MS) {
 
 async function run() {
   const id = userId()
-  if (!id || !supabaseConfigured) return useSyncStore.setState({ status: 'off', error: null })
+  // A guest's demo never syncs, and neither does the moment of swapping it out.
+  if (!id || !supabaseConfigured || guestHoldsStore()) return useSyncStore.setState({ status: 'off', error: null })
   if (running) {
     runAgain = true // a change arrived mid-sync; go round once more when this one ends
     return
@@ -94,10 +96,12 @@ export function startSync(): () => void {
   baseline = toLocalData(useGameStore.getState())
 
   // Every change to the data is noted as waiting to upload, signed in or not,
-  // so edits made signed out or offline are uploaded later.
+  // so edits made signed out or offline are uploaded later. Guest mode is the
+  // exception: a guest's changes are never noted, so they can't upload later.
   const stopWatchingData = useGameStore.subscribe((s) => {
     const next = toLocalData(s)
-    if (!applyingRemote) {
+    // Downloads and guest data are not edits waiting to upload.
+    if (!applyingRemote && !guestHoldsStore()) {
       const meta = useSyncStore.getState().meta
       const tracked = trackChanges(meta, baseline, next, now())
       if (tracked !== meta) {

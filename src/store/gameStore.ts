@@ -1,10 +1,24 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
 import { isFrameComplete } from '../scoring/frame'
 import { addShot } from '../game/game'
 import { removeLastShot } from '../game/removeLastShot'
 import type { Ball, BallSpec, Session, Pattern, BowlerProfile, Game, SeasonClose } from '../types'
 import type { Collections } from '../sync/tables'
+import { blockedForGuest, isGuest } from '../guest/guestStore'
+
+// Where the store is saved on the device. A guest gets a key of their own, so a
+// demo never overwrites, or shows, the nights of an account used on this device.
+export const GAME_KEY = 'bowling-tracker'
+export const GUEST_GAME_KEY = 'bowling-tracker-guest'
+
+const savedAs = (name: string) => (isGuest() ? GUEST_GAME_KEY : name)
+const local = () => globalThis.localStorage as Storage | undefined
+const routedStorage: StateStorage = {
+  getItem: (name) => local()?.getItem(savedAs(name)) ?? null,
+  setItem: (name, value) => local()?.setItem(savedAs(name), value),
+  removeItem: (name) => local()?.removeItem(savedAs(name)),
+}
 
 type GameEntry = {
   sessionId: string
@@ -70,6 +84,17 @@ function getActiveGame(state: AppState) {
   return session.games[entry.gameIndex] ?? null
 }
 
+// The store with no data in it: what a guest's demo is swapped out for.
+export const emptyCollections = (): Collections & { activeEntry: GameEntry | null } => ({
+  profile: null,
+  ballSpecs: [],
+  balls: [],
+  sessions: [],
+  patterns: [],
+  seasonCloses: [],
+  activeEntry: null,
+})
+
 // Helper: return NEW sessions with one game swapped out (never mutates)
 function replaceGame(
   sessions: Session[],
@@ -87,68 +112,100 @@ function replaceGame(
 export const useGameStore = create<AppState>()(
   persist(
     (set, get) => ({
-      profile: null,
-      ballSpecs: [],
-      balls: [],
-      sessions: [],
-      patterns: [],
-      seasonCloses: [],
-      activeEntry: null,
+      ...emptyCollections(),
+
+      // Actions marked "Guest: blocked" do nothing in guest mode and show the
+      // sign-up prompt instead. Screens check first too, so a form isn't
+      // cleared or navigated away from; this is the backstop. Scoring and
+      // sessions are open to guests: they stay on the device and never sync.
 
       // Merge so saving one part (e.g. weight) doesn't wipe another (e.g. PAP)
-      updateProfile: (patch) =>
-        set((state) => ({ profile: { ...state.profile, ...patch } })),
+      updateProfile: (patch) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set((state) => ({ profile: { ...state.profile, ...patch } }))
+      },
 
-      addBallSpec: (spec) =>
-        set((state) => ({ ballSpecs: [...state.ballSpecs, spec] })),
+      addBallSpec: (spec) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set((state) => ({ ballSpecs: [...state.ballSpecs, spec] }))
+      },
 
       // A model's details are shared by every copy of that ball
-      updateBallSpec: (id, updates) =>
+      updateBallSpec: (id, updates) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
         set((state) => ({
           ballSpecs: state.ballSpecs.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-        })),
+        }))
+      },
 
-      addBall: (ball) =>
-        set((state) => ({ balls: [...state.balls, ball] })),
+      addBall: (ball) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set((state) => ({ balls: [...state.balls, ball] }))
+      },
 
-      updateBall: (id, updates) =>
+      updateBall: (id, updates) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
         set((state) => ({
           balls: state.balls.map((b) =>
             b.id === id ? { ...b, ...updates } : b
           ),
-        })),
+        }))
+      },
 
-      removeBall: (id) =>
+      removeBall: (id) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
         set((state) => ({
           balls: state.balls.filter((b) => b.id !== id),
-        })),
+        }))
+      },
 
-      addPattern: (pattern) =>
-        set((state) => ({ patterns: [...state.patterns, pattern] })),
+      addPattern: (pattern) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set((state) => ({ patterns: [...state.patterns, pattern] }))
+      },
 
       // Replaces the whole pattern, so switching between house and sport can't leave stray fields
-      updatePattern: (pattern) =>
-        set((state) => ({ patterns: state.patterns.map((p) => (p.id === pattern.id ? pattern : p)) })),
+      updatePattern: (pattern) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set((state) => ({ patterns: state.patterns.map((p) => (p.id === pattern.id ? pattern : p)) }))
+      },
 
       // Nights bowled on a removed pattern stay, and count as house shot in stats
-      removePattern: (id) =>
-        set((state) => ({ patterns: state.patterns.filter((p) => p.id !== id) })),
+      removePattern: (id) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set((state) => ({ patterns: state.patterns.filter((p) => p.id !== id) }))
+      },
 
-      closeSeason: (leagueKey) =>
+      closeSeason: (leagueKey) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
         set((state) => ({
           seasonCloses: [
             ...state.seasonCloses,
             { id: crypto.randomUUID(), leagueKey, closedAt: new Date().toISOString() },
           ],
-        })),
+        }))
+      },
 
       // Reopens the most recently closed season of this league
-      undoCloseSeason: (leagueKey) =>
+      undoCloseSeason: (leagueKey) => {
+        // Guest: blocked
+        if (blockedForGuest()) return
         set((state) => {
           const mine = state.seasonCloses.filter((c) => c.leagueKey === leagueKey)
           const last = mine.sort((a, b) => b.closedAt.localeCompare(a.closedAt))[0]
           return last ? { seasonCloses: state.seasonCloses.filter((c) => c.id !== last.id) } : {}
-        }),
+        })
+      },
 
       startSession: (session) =>
         set((state) => ({
@@ -178,7 +235,11 @@ export const useGameStore = create<AppState>()(
 
       // Clears every night and season close. Arsenal, patterns and profile stay.
       // When signed in, the sync layer sees the removals and deletes the cloud copies too.
-      resetNights: () => set({ sessions: [], seasonCloses: [], activeEntry: null }),
+      resetNights: () => {
+        // Guest: blocked
+        if (blockedForGuest()) return
+        set({ sessions: [], seasonCloses: [], activeEntry: null })
+      },
 
       applyRemote: (patch) => set(patch),
 
@@ -236,7 +297,8 @@ export const useGameStore = create<AppState>()(
       },
     }),
     {
-      name: 'bowling-tracker',
+      name: GAME_KEY,
+      storage: createJSONStorage(() => routedStorage),
     }
   )
 )

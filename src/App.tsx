@@ -3,6 +3,10 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet, useLocation } fr
 import { useAuthStore } from './auth/authStore'
 import { supabaseConfigured } from './lib/supabaseConfig'
 import { startSync } from './sync/sync'
+import { useGuestStore } from './guest/guestStore'
+import { startGuestBridge } from './guest/guestBridge'
+import { GuestBanner } from './components/GuestBanner'
+import { GuestPrompt } from './components/GuestPrompt'
 import { LoginScreen } from './screens/LoginScreen'
 import { AppError } from './components/AppError'
 import { CheckingSignIn } from './components/CheckingSignIn'
@@ -28,18 +32,23 @@ function AppShell() {
   useEffect(() => init(), [init])
   // Background backup and sync. It watches for changes and runs on its own.
   useEffect(() => startSync(), [])
+  // Ends guest mode, and brings along any games the guest kept, once a real account signs in.
+  useEffect(() => startGuestBridge(), [])
 
   return <Outlet />
 }
 
 // Signed out, there is nothing to show but the Sign in screen: no app, no nav.
-// The one exception is a build with no Supabase keys, where signing in is
-// impossible; gating there would leave a dead app, so it stays open.
+// Two exceptions: a guest trying the app, and a build with no Supabase keys,
+// where signing in is impossible and gating would leave a dead app.
 function RequireAuth() {
   const session = useAuthStore((s) => s.session)
   const loading = useAuthStore((s) => s.loading)
+  const guest = useGuestStore((s) => s.active)
   const location = useLocation()
 
+  // A guest has no account to check, so they never wait on the check.
+  if (guest) return <Outlet />
   // Still reading the saved sign-in: don't flash the Sign in screen or throw
   // away where the person was heading, but don't show a blank page either.
   if (loading) return <CheckingSignIn />
@@ -55,9 +64,11 @@ function Layout() {
       <Sidebar />
       {/* Bottom padding clears the phone's bottom bar; the side padding keeps content out of notches. */}
       <main className="min-w-0 flex-1 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(5rem+env(safe-area-inset-bottom))] pl-4 md:pt-8 md:pr-[max(2rem,env(safe-area-inset-right))] md:pb-8 md:pl-8 short:pt-3! short:pb-3! short:pl-4!">
+        <GuestBanner />
         <Outlet />
       </main>
       <BottomNav />
+      <GuestPrompt />
     </div>
   )
 }

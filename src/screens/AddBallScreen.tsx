@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useGameStore } from '../store/gameStore'
+import { blockedForGuest } from '../guest/guestStore'
 import { parseInches } from '../measure/inches'
 import { findSpec } from '../arsenal/specs'
 import type { Ball, Layout } from '../types'
@@ -119,6 +120,7 @@ function BallForm({ ball }: { ball?: Ball }) {
 
     const lbs = parseBallWeight(weight)
     if (lbs === null) return setError('Weight: whole pounds, 6-16.')
+    if (blockedForGuest()) return // the form stays filled in behind the prompt
 
     const modelFields = {
       brand: brand.trim(),
@@ -253,6 +255,7 @@ function BallForm({ ball }: { ball?: Ball }) {
               <button
                 type="button"
                 onClick={() => {
+                  if (blockedForGuest()) return
                   removeBall(ball.id)
                   navigate('/arsenal')
                 }}

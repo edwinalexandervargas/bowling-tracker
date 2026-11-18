@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../store/gameStore'
+import { blockedForGuest } from '../guest/guestStore'
 import { parseInches, formatInches } from '../measure/inches'
 import { parseBallWeight, parseUsbcNumber } from '../profile/profileFields'
 import type { BowlingStyle, Hand } from '../types'
@@ -81,6 +82,7 @@ function DataSection() {
             <button
               type="button"
               onClick={() => {
+                if (blockedForGuest()) return
                 resetNights()
                 setConfirming(false)
                 setDone(true)
@@ -157,6 +159,7 @@ function PapForm({ onDone, canCancel }: { onDone: () => void; canCancel: boolean
       setError('Use inches in 1/16 steps, like 4 1/2 or 5/8.')
       return
     }
+    if (blockedForGuest()) return
     updateProfile({ papOver, papUp: direction === 'down' ? -papUp : papUp })
     onDone() // swaps back to the read-only line
   }
@@ -271,6 +274,7 @@ function BowlerInfoForm({ onDone, canCancel }: { onDone: () => void; canCancel: 
     if (ballWeight === null) found.push('Ball weight: whole pounds, 6-16.')
     setErrors(found)
     if (usbcNumber === null || ballWeight === null) return
+    if (blockedForGuest()) return
 
     updateProfile({ usbcNumber, ballWeight, hand, style })
     onDone() // swaps back to the read-only view
