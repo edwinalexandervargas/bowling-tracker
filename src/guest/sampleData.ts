@@ -59,6 +59,16 @@ function sampleNights(now: Date): Session[] {
         sampleGame('n2g3', '7,/ 10,/ X 8.10,- X 7,/ X X 4,/ X,9.10,-'),
       ],
     },
+    {
+      id: `${SAMPLE_PREFIX}night-3`,
+      date: daysAgo(now, 2),
+      type: 'practice',
+      games: [
+        sampleGame('n3g1', 'X X X 9,/ X 7,/ X X 10,/ X,X,9'),
+        sampleGame('n3g2', '9,/ X X 8,/ X X 7,- X X X,X,X'),
+        sampleGame('n3g3', '8,/ X 7,- 9,/ X 10,/ 6,- X 8,/ 9,/,X'),
+      ],
+    },
   ]
 }
 
